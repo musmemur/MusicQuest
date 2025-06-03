@@ -31,6 +31,7 @@ export const GamePage = () => {
     const navigate = useNavigate();
     const questionTimerRef = useRef(10);
     const countdownTimerRef = useRef(10);
+    const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
 
     useEffect(() => {
         if (!connection || !gameId) return;
@@ -111,6 +112,7 @@ export const GamePage = () => {
     const handleAnswer = async (answerIndex: number) => {
         if (!connection || !gameId || !currentQuestion || isAnswerSubmitted) return;
         setIsAnswerSubmitted(true);
+        setSelectedAnswerIndex(answerIndex);
         try {
             const fetchedUser = await fetchAuthUserData();
             const loggedUser: User = fetchedUser as User;
@@ -119,6 +121,7 @@ export const GamePage = () => {
         } catch (error) {
             console.error("Error submitting answer:", error);
             setIsAnswerSubmitted(false);
+            setSelectedAnswerIndex(null);
         }
     };
 
@@ -126,8 +129,7 @@ export const GamePage = () => {
 
     return (
         <div className="game-page">
-            <h1>Викторина</h1>
-            <h2>Вопрос {questionIndex}/{totalQuestions}</h2>
+            <h1>Вопрос {questionIndex}/{totalQuestions}</h1>
 
             {currentQuestion?.questionType === "artist" ? (
                 <>
@@ -139,6 +141,10 @@ export const GamePage = () => {
                 </>
             )}
 
+            {currentQuestion?.previewUrl && (
+                <audio controls autoPlay src={currentQuestion.previewUrl}/>
+            )}
+
             <div className="time-container">
                 <div
                     className="time-bar"
@@ -146,24 +152,28 @@ export const GamePage = () => {
                 ></div>
             </div>
 
-            {currentQuestion?.previewUrl && (
-                <audio controls autoPlay src={currentQuestion.previewUrl}/>
-            )}
-
-            <div className="options">
+            <div className="question-options">
                 {currentQuestion?.options.map((option, index) => (
                     <button
                         key={index}
                         onClick={() => handleAnswer(index)}
                         disabled={timeLeft <= 0 || isAnswerSubmitted}
-                        className={isAnswerSubmitted && index === currentQuestion.correctIndex ? "correct-answer" : ""}
+                        className={
+                            isAnswerSubmitted
+                                ? index === currentQuestion.correctIndex
+                                    ? "correct-answer"
+                                    : index === selectedAnswerIndex
+                                        ? "incorrect-answer"
+                                        : ""
+                                : ""
+                        }
                     >
                         {option}
                     </button>
                 ))}
             </div>
 
-            <p>Текущий счет: {score}</p>
+            <h2>Ваш счёт: {score}</h2>
         </div>
     );
 };
