@@ -1,0 +1,5 @@
+.userPage-main {
+    display: flex;
+    margin: 2rem 3rem;
+    gap: 10rem;
+}

@@ -1,0 +1,158 @@
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useSignalR } from "../../app/signalRContext.tsx";
+import { fetchAuthUserData } from "../../processes/fetchAuthUserData.ts";
+import type { User } from "../../entities/User.ts";
+import { Header } from "../../widgets/Header";
+import './index.css';
+import photoPlaceholder from '../../shared/assets/photo-placeholder.png';
+import {Link} from "react-router";
+
+export type PlayerScoreDto = {
+    username: string;
+    userPhoto?: string;
+    score: number;
+};
+
+export type GameResultsDto = {
+    gameId: string;
+    roomId: string;
+    genre: string;
+    winnerId: string;
+    winnerName: string;
+    playlistId?: string;
+    scores: Record<string, PlayerScoreDto>;
+    endedAt: string;
+};
+
+export const GameResultsPage = () => {
+    const { gameId } = useParams();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const connection = useSignalR();
+    const [results, setResults] = useState<GameResultsDto | null>(null);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [isWinner, setIsWinner] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (connection && gameId) {
+            connection.invoke("GetGameResults", gameId)
+                .then((serverResults: GameResultsDto) => {
+                    setResults(serverResults);
+                    setLoading(false);
+                })
+                .catch(err => {
+                    console.error("Error fetching game results:", err);
+                    setLoading(false);
+                });
+        }
+
+        fetchAuthUserData()
+            .then(user => {
+                const authUser = user as User;
+                setCurrentUser(authUser);
+                if (results && authUser) {
+                    setIsWinner(results.winnerId === authUser.userId);
+                }
+            })
+            .catch(() => navigate('/sign-up/login'));
+    }, [connection, gameId, location.state]);
+
+    const handleBackToHome = () => {
+        navigate(`/home`);
+    };
+
+    if (loading) {
+        return (
+            <div className="game-results-page">
+                <Header />
+                <div className="loading-container">
+                    <p>Loading results...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!results) {
+        return (
+            <div className="game-results-page">
+                <Header />
+                <div className="error-container">
+                    <p>No results found for this game.</p>
+                    <button onClick={handleBackToHome}>Back to Home</button>
+                </div>
+            </div>
+        );
+    }
+
+    const sortedPlayers = Object.entries(results.scores)
+        .map(([userId, player]) => ({ userId, ...player }))
+        .sort((a, b) => b.score - a.score);
+
+    return (
+        <div className="game-results-page">
+            <Header />
+
+            <div className="results-container">
+                <h1>Game Results</h1>
+                <div className="winner-section">
+                    <h2>🏆 Winner: {results.winnerName}</h2>
+                    {isWinner && results.playlistId && (
+                        <div className="playlist-reward">
+                            <p>Congratulations! You've won a playlist with {results.genre} songs!</p>
+                            <button
+                                onClick={() => navigate(`/user/${currentUser?.userId}`)}
+                                className="view-playlist-btn"
+                            >
+                                View Your Playlist
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                <div className="scores-table">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Player</th>
+                            <th>Score</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {sortedPlayers.map((player, index) => (
+                            <tr
+                                key={player.userId}
+                                className={player.userId === results.winnerId ? "winner-row" : ""}
+                            >
+                                <td>{index + 1}</td>
+                                <td>
+                                    <Link to={`/user/${player.userId}`} className="player-info">
+                                        <img
+                                            src={player.userPhoto || photoPlaceholder}
+                                            alt={player.username}
+                                            className="player-avatar"
+                                        />
+                                        <span>{player.username}</span>
+                                        {player.userId === currentUser?.userId && (
+                                            <span className="you-badge">(You)</span>
+                                        )}
+                                    </Link>
+                                </td>
+                                <td>{player.score}</td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div className="actions">
+                    <button onClick={handleBackToHome} className="back-button">
+                        Back to Home
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};

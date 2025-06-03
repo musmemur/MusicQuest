@@ -1,0 +1,55 @@
+.create-room-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.form-group {
+    margin: 25px 0;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.question-count-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.count-btn {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    background: #f5f5f5;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.count-btn.active {
+    background: #6200ee;
+    color: white;
+    border-color: #6200ee;
+}
+
+.create-btn {
+    background: #6200ee;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.create-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}

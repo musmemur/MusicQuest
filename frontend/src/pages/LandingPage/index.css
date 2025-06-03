@@ -1,0 +1,40 @@
+.landing-logo {
+    width: 20rem;
+    height: 20rem;
+}
+
+.landing-list {
+    list-style: "\2605";
+    margin-top: 0;
+    padding-left: 3rem;
+}
+
+.landing-main {
+    background-color: var(--main-content-background-color);
+    font-size: 4rem;
+    padding: 2rem;
+    margin: 1rem;
+}
+
+.landing-topic {
+    display: flex;
+    gap: 2rem;
+    font-size: 5rem;
+}
+
+.landing-topic p {
+    margin-top: 1rem;
+}
+
+.signUp-button {
+    background-color: var(--button-primary-color);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+    padding: 1rem;
+    width: 45vw;
+}

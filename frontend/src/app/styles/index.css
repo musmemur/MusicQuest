@@ -1,0 +1,20 @@
+* {
+    font-family: "Roboto", -apple-system, sans-serif;
+}
+
+body {
+    margin: 0;
+}
+
+button, input[type=submit] {
+    cursor: pointer;
+}
+
+a {
+    color: black;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline rgba(0, 0, 0, 0.5);
+}

@@ -1,0 +1,28 @@
+.user-data {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.user-data-links {
+    display: flex;
+    gap: 1.5rem;
+    box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.12);
+    height: 2.5rem;
+}
+
+.user-data-links a {
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.user-data > h2 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.playlist {
+    box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.12);
+}

@@ -1,0 +1,33 @@
+.user-playlists {
+    border-radius: 0.5rem;
+}
+
+.playlist-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+    gap: 3rem;
+}
+
+.playlist {
+    border: 1px solid var(--border-color);
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+}
+
+.playlist-header > button {
+    border: none;
+    background: none;
+}
+
+.playlist-header > button svg {
+    width: 4rem;
+    height: 4rem;
+}
+
+.no-playlists {
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    border-radius: 0.5rem;
+}

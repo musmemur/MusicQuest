@@ -1,0 +1,12 @@
+.available-room {
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.available-room button {
+    padding: 1rem;
+    background: var(--secondary-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+}
