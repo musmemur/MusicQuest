@@ -122,30 +122,32 @@ export const GamePage = () => {
         }
     };
 
+    const timePercentage = (timeLeft / 10) * 100;
+
     return (
         <div className="game-page">
-            <h1>Викторина ({questionIndex}/{totalQuestions})</h1>
+            <h1>Викторина</h1>
+            <h2>Вопрос {questionIndex}/{totalQuestions}</h2>
 
             {currentQuestion?.questionType === "artist" ? (
                 <>
                     <h2>Кто исполнитель этой песни?</h2>
-                    <p>Название трека: {currentQuestion.artist}</p>
                 </>
             ) : (
                 <>
                     <h2>Какое название этой песни?</h2>
-                    <p>Исполнитель: {currentQuestion?.trackTitle}</p>
                 </>
             )}
 
-            <p>Осталось времени: {timeLeft} сек</p>
+            <div className="time-container">
+                <div
+                    className="time-bar"
+                    style={{width: `${timePercentage}%`}}
+                ></div>
+            </div>
 
             {currentQuestion?.previewUrl && (
-                <audio controls autoPlay src={currentQuestion.previewUrl} />
-            )}
-
-            {currentQuestion?.coverUrl && (
-                <img src={currentQuestion.coverUrl} alt="Обложка" width={200} />
+                <audio controls autoPlay src={currentQuestion.previewUrl}/>
             )}
 
             <div className="options">
