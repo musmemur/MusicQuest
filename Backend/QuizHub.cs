@@ -42,8 +42,7 @@ public class QuizHub(DeezerApiClient deezerClient,
                 Id = Guid.NewGuid(),
                 UserId = Guid.Parse(userId),
                 RoomId = Guid.Parse(roomId),
-                Score = 0,
-                JoinedAt = DateTime.UtcNow
+                Score = 0
             };
 
             dbContext.Players.Add(player);

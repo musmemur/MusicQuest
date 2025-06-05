@@ -58,7 +58,6 @@ public class RoomsController(AppDbContext dbContext, IHubContext<QuizHub> hubCon
             UserId = Guid.Parse(userId),
             RoomId = room.Id,
             Score = 0,
-            JoinedAt = DateTime.UtcNow
         };
 
         dbContext.Rooms.Add(room);
