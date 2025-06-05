@@ -250,50 +250,80 @@ public class QuizHub(DeezerApiClient deezerClient,
 
     public async Task<string> CreateWinnerPlaylist(string gameSessionId, string winnerId, string genre)
     {
-        var gameSession = await dbContext.GameSessions
-            .Include(gs => gs.Room)
-            .FirstOrDefaultAsync(gs => gs.Id == Guid.Parse(gameSessionId));
+        var gameSessionGuid = Guid.Parse(gameSessionId);
+        var winnerIdGuid = Guid.Parse(winnerId);
 
-        if (gameSession == null)
+        await using var transaction = await dbContext.Database.BeginTransactionAsync();
+
+        try
         {
-            throw new HubException("Game session not found");
-        }
+            // Проверяем существование плейлиста
+            var existingPlaylist = await dbContext.Playlists
+                .FirstOrDefaultAsync(p => p.GameSessionId == gameSessionGuid);
 
-        var tracks = await deezerClient.GetTracksByGenreAsync(genre, 15);
-
-        var playlist = new Playlist(Guid.Parse(winnerId), $"Quiz Winner: {genre} Music");
-        
-        foreach (var deezerTrack in tracks)
-        {
-            var existingTrack = await dbContext.Tracks
-                .FirstOrDefaultAsync(t => t.DeezerTrackId == deezerTrack.Id);
-            
-            if (existingTrack == null)
+            if (existingPlaylist != null)
             {
-                existingTrack = new Track
-                {
-                    Id = Guid.NewGuid(),
-                    DeezerTrackId = deezerTrack.Id,
-                    Title = deezerTrack.Title,
-                    Artist = deezerTrack.Artist?.Name ?? "Unknown Artist",
-                    PreviewUrl = deezerTrack.Preview,
-                    CoverUrl = deezerTrack.Album?.Cover ?? string.Empty
-                };
-                dbContext.Tracks.Add(existingTrack);
+                await transaction.CommitAsync();
+                return existingPlaylist.Id.ToString();
             }
 
-            var playlistTrack = new PlaylistTrack
+            var tracks = await deezerClient.GetTracksByGenreAsync(genre, 15);
+
+            // Создаем плейлист, но пока не добавляем в контекст
+            var playlist = new Playlist(winnerIdGuid, $"Quiz Winner: {genre} Music")
             {
-                PlaylistId = playlist.Id,
-                TrackId = existingTrack.Id
+                GameSessionId = gameSessionGuid,
+                PlaylistTracks = new List<PlaylistTrack>() // Инициализируем коллекцию
             };
-            playlist.PlaylistTracks.Add(playlistTrack);
+
+            // Сначала собираем все треки
+            var trackEntities = new List<Track>();
+            foreach (var deezerTrack in tracks)
+            {
+                var existingTrack = await dbContext.Tracks
+                    .FirstOrDefaultAsync(t => t.DeezerTrackId == deezerTrack.Id);
+
+                if (existingTrack == null)
+                {
+                    existingTrack = new Track
+                    {
+                        Id = Guid.NewGuid(),
+                        DeezerTrackId = deezerTrack.Id,
+                        Title = deezerTrack.Title,
+                        Artist = deezerTrack.Artist?.Name ?? "Unknown Artist",
+                        PreviewUrl = deezerTrack.Preview,
+                        CoverUrl = deezerTrack.Album?.Cover ?? string.Empty
+                    };
+                    dbContext.Tracks.Add(existingTrack);
+                }
+                trackEntities.Add(existingTrack);
+            }
+
+            // Сохраняем все треки перед созданием связей
+            await dbContext.SaveChangesAsync();
+
+            // Теперь добавляем связи
+            foreach (var track in trackEntities)
+            {
+                playlist.PlaylistTracks.Add(new PlaylistTrack
+                {
+                    TrackId = track.Id,
+                    Track = track
+                });
+            }
+
+            // Добавляем плейлист в контекст (единожды)
+            dbContext.Playlists.Add(playlist);
+            await dbContext.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return playlist.Id.ToString();
         }
-
-        dbContext.Playlists.Add(playlist);
-        await dbContext.SaveChangesAsync();
-
-        return playlist.Id.ToString();
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
     
     public async Task EndGame(string gameSessionId)

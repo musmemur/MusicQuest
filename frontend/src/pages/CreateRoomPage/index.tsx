@@ -68,7 +68,6 @@ export const CreateRoomPage = () => {
                     })
                 });
 
-                if (!response.ok) throw new Error('Failed to create room');
                 const data = await response.json();
 
                 if (connection) {
