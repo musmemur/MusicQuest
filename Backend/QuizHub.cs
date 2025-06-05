@@ -95,7 +95,6 @@ public class QuizHub(DeezerApiClient deezerClient,
         {
             Id = Guid.NewGuid(),
             Status = "InProgress",
-            StartedAt = DateTime.UtcNow,
             RoomId = room.Id,
             Questions = questions,
             QuestionsCount = room.QuestionsCount,
@@ -215,34 +214,6 @@ public class QuizHub(DeezerApiClient deezerClient,
     
     public async Task<GameResultDto> GetGameResults(string gameSessionId)
     {
-        // Сначала попробуем найти существующие результаты
-        var gameResult = await dbContext.GameResults
-            .Include(gr => gr.PlayerScores)
-            .ThenInclude(ps => ps.User)
-            .Include(gr => gr.Winner)
-            .FirstOrDefaultAsync(gr => gr.GameSessionId == Guid.Parse(gameSessionId));
-
-        if (gameResult != null)
-        {
-            return new GameResultDto
-            {
-                GameId = gameResult.GameSessionId,
-                RoomId = gameResult.RoomId,
-                Genre = gameResult.Genre,
-                WinnerId = gameResult.WinnerId,
-                WinnerName = gameResult.Winner.Username,
-                PlaylistId = gameResult.PlaylistId?.ToString(),
-                Scores = gameResult.PlayerScores.ToDictionary(
-                    ps => ps.UserId.ToString(),
-                    ps => new PlayerScoreDto
-                    {
-                        Username = ps.User.Username,
-                        UserPhoto = ps.User.UserPhoto,
-                        Score = ps.Score
-                    }),
-            };
-        }
-
         var gameSession = await dbContext.GameSessions
             .Include(gs => gs.Room)
             .ThenInclude(r => r.Players)
@@ -250,9 +221,7 @@ public class QuizHub(DeezerApiClient deezerClient,
             .FirstOrDefaultAsync(gs => gs.Id == Guid.Parse(gameSessionId));
 
         if (gameSession == null)
-        {
             throw new HubException("Game session not found");
-        }
 
         var winner = gameSession.Room.Players
             .OrderByDescending(p => p.Score)
@@ -354,6 +323,7 @@ public class QuizHub(DeezerApiClient deezerClient,
             PlaylistId = playlistId
         });
 
+        gameSession.Status = "Completed";
         gameSession.Room.IsActive = false;
         await dbContext.SaveChangesAsync();
     }

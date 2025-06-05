@@ -13,8 +13,6 @@ public class AppDbContext(IConfiguration configuration) : DbContext
     public DbSet<Player> Players => Set<Player>();
     public DbSet<GameSession> GameSessions => Set<GameSession>();
     public DbSet<QuizQuestion> QuizQuestions => Set<QuizQuestion>();
-    public DbSet<GameResult> GameResults => Set<GameResult>();
-    public DbSet<PlayerScore> PlayerScores => Set<PlayerScore>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -79,42 +77,5 @@ public class AppDbContext(IConfiguration configuration) : DbContext
             .HasOne(q => q.GameSession)
             .WithMany(gs => gs.Questions)
             .HasForeignKey(q => q.GameSessionId)
-            .OnDelete(DeleteBehavior.Cascade);
-        
-        modelBuilder.Entity<GameResult>()
-            .HasOne(gr => gr.GameSession)
-            .WithMany()
-            .HasForeignKey(gr => gr.GameSessionId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<GameResult>()
-            .HasOne(gr => gr.Room)
-            .WithMany()
-            .HasForeignKey(gr => gr.RoomId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<GameResult>()
-            .HasOne(gr => gr.Winner)
-            .WithMany()
-            .HasForeignKey(gr => gr.WinnerId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<GameResult>()
-            .HasOne(gr => gr.Playlist)
-            .WithOne()
-            .HasForeignKey<GameResult>(gr => gr.PlaylistId)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        // Конфигурация PlayerScore
-        modelBuilder.Entity<PlayerScore>()
-            .HasOne(ps => ps.GameResult)
-            .WithMany(gr => gr.PlayerScores)
-            .HasForeignKey(ps => ps.GameResultId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<PlayerScore>()
-            .HasOne(ps => ps.User)
-            .WithMany()
-            .HasForeignKey(ps => ps.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }}
