@@ -358,6 +358,23 @@ public class QuizHub(DeezerApiClient deezerClient,
         await dbContext.SaveChangesAsync();
     }
     
+    public async Task IsUserHost(string gameSessionId, string userId)
+    {
+        var gameSession = await dbContext.GameSessions
+            .Include(gs => gs.Room)
+            .Include(gs => gs.Questions)
+            .FirstOrDefaultAsync(gs => gs.Id == Guid.Parse(gameSessionId));
+        
+        if (gameSession == null)
+        {
+            throw new HubException("Game session not found");
+        }
+
+        var isHost = gameSession.Room.HostUserId.ToString() == userId;
+        await Clients.Caller.SendAsync("ReceiveHostStatus", isHost);
+
+    }
+    
     // public override async Task OnDisconnectedAsync(Exception? exception)
     // {
     //     var connectionId = Context.ConnectionId;

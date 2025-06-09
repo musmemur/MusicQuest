@@ -32,9 +32,45 @@ export const GamePage = () => {
     const questionTimerRef = useRef(10);
     const countdownTimerRef = useRef(10);
     const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
+    const [isHost, setIsHost] = useState(false);
+    const [isHostChecked, setIsHostChecked] = useState(false);
 
     useEffect(() => {
         if (!connection || !gameId) return;
+
+        const initializeGame = async () => {
+            try {
+                const fetchedUser = await fetchAuthUserData();
+                const loggedUser: User = fetchedUser as User;
+
+                // Подписываемся на получение статуса хоста
+                connection.on("ReceiveHostStatus", (isHost: boolean) => {
+                    setIsHost(isHost);
+                    setIsHostChecked(true);
+
+                    // Только после проверки статуса начинаем игру
+                    if (isHost) {
+                        connection.invoke("GetNextQuestion", gameId);
+                    }
+                });
+
+                // Запрашиваем проверку статуса
+                connection.invoke("IsUserHost", gameId, loggedUser.userId);
+
+            } catch (error) {
+                console.error("Error initializing game:", error);
+            }
+        };
+
+        initializeGame();
+
+        return () => {
+            connection.off("ReceiveHostStatus");
+        };
+    }, [connection, gameId]);
+
+    useEffect(() => {
+        if (!connection || !gameId || !isHostChecked) return;
 
         const startQuestionTimer = () => {
             if (questionTimerRef.current) {
@@ -42,7 +78,9 @@ export const GamePage = () => {
             }
 
             questionTimerRef.current = setTimeout(() => {
-                connection.invoke("GetNextQuestion", gameId);
+                if (isHost) {
+                    connection.invoke("GetNextQuestion", gameId);
+                }
             }, 10000);
         };
 
@@ -68,8 +106,8 @@ export const GamePage = () => {
             navigate(`/game-results/${gameId}`, { state: { scores: finalScores } });
         });
 
-        connection.invoke("GetNextQuestion", gameId);
-        startQuestionTimer();
+        // Таймер запускается только после получения первого вопроса
+        // через событие NextQuestion
 
         return () => {
             connection.off("NextQuestion");
@@ -81,7 +119,7 @@ export const GamePage = () => {
                 clearInterval(countdownTimerRef.current);
             }
         };
-    }, [gameId, connection, navigate]);
+    }, [gameId, connection, navigate, isHost, isHostChecked]);
 
     useEffect(() => {
         if (countdownTimerRef.current) {
