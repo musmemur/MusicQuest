@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Security.Claims;
 using Backend.DataBase;
+using Backend.Dto;
 using Backend.Entities;
 using Backend.Modals;
 using Backend.Services;
@@ -332,6 +333,7 @@ public class QuizHub(DeezerApiClient deezerClient,
             .Include(gs => gs.Room)
             .ThenInclude(r => r.Players)
             .ThenInclude(p => p.User)
+            .Include(gs => gs.Questions) // Добавляем включение вопросов
             .FirstOrDefaultAsync(gs => gs.Id == Guid.Parse(gameSessionId));
 
         if (gameSession == null) return;
@@ -353,6 +355,7 @@ public class QuizHub(DeezerApiClient deezerClient,
             PlaylistId = playlistId
         });
 
+        dbContext.QuizQuestions.RemoveRange(gameSession.Questions);
         gameSession.Status = "Completed";
         gameSession.Room.IsActive = false;
         await dbContext.SaveChangesAsync();
@@ -407,22 +410,4 @@ public class QuizHub(DeezerApiClient deezerClient,
     //
     //     await base.OnDisconnectedAsync(exception);
     // }
-}
-
-public class GameResultDto
-{
-    public Guid GameId { get; set; }
-    public Guid RoomId { get; set; }
-    public string Genre { get; set; }
-    public Guid WinnerId { get; set; }
-    public string WinnerName { get; set; }
-    public string PlaylistId { get; set; }
-    public Dictionary<string, PlayerScoreDto> Scores { get; set; }
-}
-
-public class PlayerScoreDto
-{
-    public string Username { get; set; }
-    public string UserPhoto { get; set; }
-    public int Score { get; set; }
 }

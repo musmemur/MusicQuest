@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using Backend.DataBase;
+using Backend.Dto;
 using Backend.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -66,19 +67,4 @@ public class RoomsController(AppDbContext dbContext, IHubContext<QuizHub> hubCon
     
         return Ok(new { roomId = room.Id.ToString() });
     }
-}
-
-public class RoomDto
-{
-    public string Id { get; set; }
-    public string Name { get; set; }
-    public string Genre { get; set; }
-    public int PlayersCount { get; set; }
-}
-
-public class CreateRoomDto
-{
-    public string Genre { get; set; }
-    public int QuestionCount { get; set; }
-    public Guid UserHostId { get; set; }
 }
