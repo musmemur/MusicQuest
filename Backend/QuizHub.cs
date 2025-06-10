@@ -1,19 +1,14 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using System.Collections.Concurrent;
-using System.Security.Claims;
 using Backend.DataBase;
 using Backend.Dto;
 using Backend.Entities;
-using Backend.Modals;
 using Backend.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
 
 namespace Backend;
 
 public class QuizHub(DeezerApiClient deezerClient, 
-    AppDbContext dbContext, 
-    UserService userService) : Hub
+    AppDbContext dbContext) : Hub
 {
     public async Task JoinRoom(string roomId, string userId)
     {
@@ -24,6 +19,7 @@ public class QuizHub(DeezerApiClient deezerClient,
             return;
         }
 
+        //надо переделать передачу данных о пользователе
         var user = await dbContext.Users
             .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
         
@@ -33,6 +29,7 @@ public class QuizHub(DeezerApiClient deezerClient,
             return;
         }
         
+        //проверить на это
         var alreadyJoined = await dbContext.Players
             .AnyAsync(p => p.RoomId == Guid.Parse(roomId) && p.UserId == Guid.Parse(userId));
 
@@ -119,6 +116,12 @@ public class QuizHub(DeezerApiClient deezerClient,
             await EndGame(gameSessionId.ToString());
             return;
         }
+        
+        if (gameSession == null)
+        {
+            await Clients.Caller.SendAsync("Error", "Game session not found");
+            return;
+        }
 
         var question = gameSession.Questions[gameSession.CurrentQuestionIndex];
         var currentIndex = gameSession.CurrentQuestionIndex;
@@ -143,13 +146,6 @@ public class QuizHub(DeezerApiClient deezerClient,
         });
     }    
     
-    public async Task UpdatePlayerCount(string roomId, int newCount)
-    {
-        // Обновляем данные комнаты
-        // И рассылаем обновление всем клиентам
-        await Clients.All.SendAsync("PlayerCountChanged", roomId, newCount);
-    }
-    
     public async Task GetNextQuestion(string gameSessionId)
     {
         var gameSession = await dbContext.GameSessions
@@ -170,7 +166,6 @@ public class QuizHub(DeezerApiClient deezerClient,
     {
         try
         {
-            // Get the game session with questions
             var gameSession = await dbContext.GameSessions
                 .Include(gs => gs.Questions)
                 .FirstOrDefaultAsync(gs => gs.Id == Guid.Parse(gameSessionId));
@@ -195,24 +190,21 @@ public class QuizHub(DeezerApiClient deezerClient,
                 throw new HubException("Player not found in this game session");
             }
 
-            // Check if answer is correct
             var isCorrect = answerIndex == question.CorrectIndex;
 
-            // Update player score if answer is correct
             if (!isCorrect) return player.Score;
-            player.Score += (remainingTime * 3);
+            player.Score += remainingTime;
             await dbContext.SaveChangesAsync();
 
             return player.Score;
         }
         catch (Exception ex)
         {
-            // Log the error
-            await Console.Error.WriteLineAsync($"Error in SubmitAnswer: {ex}");
             throw new HubException(ex.Message);
         }
     } 
     
+    //надо будет здесь удалять игроков + добавить, чтобы вызывался метод один раз хостом
     public async Task<GameResultDto> GetGameResults(string gameSessionId)
     {
         var gameSession = await dbContext.GameSessions
@@ -249,7 +241,7 @@ public class QuizHub(DeezerApiClient deezerClient,
         };
     }
 
-    public async Task<string> CreateWinnerPlaylist(string gameSessionId, string winnerId, string genre)
+    public async Task CreateWinnerPlaylist(string gameSessionId, string winnerId, string genre)
     {
         var gameSessionGuid = Guid.Parse(gameSessionId);
         var winnerIdGuid = Guid.Parse(winnerId);
@@ -258,26 +250,22 @@ public class QuizHub(DeezerApiClient deezerClient,
 
         try
         {
-            // Проверяем существование плейлиста
             var existingPlaylist = await dbContext.Playlists
                 .FirstOrDefaultAsync(p => p.GameSessionId == gameSessionGuid);
 
             if (existingPlaylist != null)
             {
                 await transaction.CommitAsync();
-                return existingPlaylist.Id.ToString();
             }
 
-            var tracks = await deezerClient.GetTracksByGenreAsync(genre, 15);
+            var tracks = await deezerClient.GetTracksByGenreAsync(genre);
 
-            // Создаем плейлист, но пока не добавляем в контекст
-            var playlist = new Playlist(winnerIdGuid, $"Quiz Winner: {genre} Music")
+            var playlist = new Playlist(winnerIdGuid, $"Playlist of {genre} Music")
             {
                 GameSessionId = gameSessionGuid,
-                PlaylistTracks = new List<PlaylistTrack>() // Инициализируем коллекцию
+                PlaylistTracks = []
             };
 
-            // Сначала собираем все треки
             var trackEntities = new List<Track>();
             foreach (var deezerTrack in tracks)
             {
@@ -291,19 +279,17 @@ public class QuizHub(DeezerApiClient deezerClient,
                         Id = Guid.NewGuid(),
                         DeezerTrackId = deezerTrack.Id,
                         Title = deezerTrack.Title,
-                        Artist = deezerTrack.Artist?.Name ?? "Unknown Artist",
+                        Artist = deezerTrack.Artist.Name,
                         PreviewUrl = deezerTrack.Preview,
-                        CoverUrl = deezerTrack.Album?.Cover ?? string.Empty
+                        CoverUrl = deezerTrack.Album.Cover
                     };
                     dbContext.Tracks.Add(existingTrack);
                 }
                 trackEntities.Add(existingTrack);
             }
 
-            // Сохраняем все треки перед созданием связей
             await dbContext.SaveChangesAsync();
 
-            // Теперь добавляем связи
             foreach (var track in trackEntities)
             {
                 playlist.PlaylistTracks.Add(new PlaylistTrack
@@ -313,12 +299,10 @@ public class QuizHub(DeezerApiClient deezerClient,
                 });
             }
 
-            // Добавляем плейлист в контекст (единожды)
             dbContext.Playlists.Add(playlist);
             await dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            return playlist.Id.ToString();
         }
         catch
         {
@@ -342,17 +326,13 @@ public class QuizHub(DeezerApiClient deezerClient,
             .OrderByDescending(p => p.Score)
             .First();
 
-        var playlistId = await CreateWinnerPlaylist(gameSessionId, winner.UserId.ToString(), gameSession.Room.Genre);
+        await CreateWinnerPlaylist(gameSessionId, winner.UserId.ToString(), gameSession.Room.Genre);
 
         await Clients.Group(gameSession.Room.Id.ToString()).SendAsync("GameEnded", new
         {
-            GameId = gameSession.Id,
-            WinnerId = winner.UserId,
             Scores = gameSession.Room.Players.ToDictionary(
                 p => p.UserId.ToString(),
-                p => new { p.User.Username, p.User.UserPhoto, p.Score }),
-            Genre = gameSession.Room.Genre,
-            PlaylistId = playlistId
+                p => new { p.User.Username, p.User.UserPhoto, p.Score })
         });
 
         dbContext.QuizQuestions.RemoveRange(gameSession.Questions);
@@ -375,7 +355,6 @@ public class QuizHub(DeezerApiClient deezerClient,
 
         var isHost = gameSession.Room.HostUserId.ToString() == userId;
         await Clients.Caller.SendAsync("ReceiveHostStatus", isHost);
-
     }
     
     // public override async Task OnDisconnectedAsync(Exception? exception)

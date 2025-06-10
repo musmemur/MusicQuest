@@ -20,9 +20,7 @@ export type GameResultsDto = {
     genre: string;
     winnerId: string;
     winnerName: string;
-    playlistId?: string;
     scores: Record<string, PlayerScoreDto>;
-    endedAt: string;
 };
 
 export const GameResultsPage = () => {
@@ -98,7 +96,7 @@ export const GameResultsPage = () => {
                 <h1>Game Results</h1>
                 <div className="winner-section">
                     <h2>🏆 Winner: {results.winnerName}</h2>
-                    {isWinner && results.playlistId && (
+                    {isWinner && (
                         <div className="playlist-reward">
                             <p>Congratulations! You've won a playlist with {results.genre} songs!</p>
                             <button

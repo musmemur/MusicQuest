@@ -11,33 +11,14 @@ namespace Backend.Controllers;
 [ApiController]
 [Route("api/playlists")]
 [Authorize]
-public class PlaylistController(AppDbContext dbContext, DeezerApiClient deezerClient, UserService userService) : ControllerBase
+public class PlaylistController(AppDbContext dbContext) : ControllerBase
 {
-    [HttpPost]
-    public async Task<IActionResult> CreatePlaylist([FromBody] PlaylistRequest request)
-    {
-        var userId = userService.GetUserId();
-        if (userId == null) return Unauthorized();
-
-        var playlist = new Playlist(userId.Value, request.Title);
-
-        dbContext.Playlists.Add(playlist);
-        await dbContext.SaveChangesAsync();
-
-        return Ok(new
-        {
-            playlist.Id,
-            playlist.Title,
-            TracksCount = playlist.PlaylistTracks.Count
-        });
-    }
-
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetPlaylist(Guid id)
     {
         var playlist = await dbContext.Playlists
-            .Include(p => p.PlaylistTracks)  // Включаем связующие элементы
-            .ThenInclude(pt => pt.Track) // Включаем сами треки
+            .Include(p => p.PlaylistTracks)
+            .ThenInclude(pt => pt.Track)
             .FirstOrDefaultAsync(p => p.Id == id);
 
         if (playlist == null) return NotFound();

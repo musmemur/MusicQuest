@@ -31,7 +31,7 @@ export const WaitingRoomPage = () => {
                 const loggedUser: User = fetchedUser as User;
 
                 if (!connection) return;
-                // Подписываемся на события SignalR
+
                 connection.on("PlayerJoined", (player: Player) => {
                     setPlayers(prev => {
                         const playerExists = prev.some(p => p.userId === player.userId);

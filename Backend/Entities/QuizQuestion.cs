@@ -11,7 +11,6 @@ public class QuizQuestion
     public string PreviewUrl { get; set; }
     public string CoverUrl { get; set; }
     
-    // Связь с GameSession
     public Guid GameSessionId { get; set; }
     public GameSession GameSession { get; set; }
 }

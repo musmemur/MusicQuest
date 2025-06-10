@@ -10,28 +10,31 @@ public class DeezerApiClient(HttpClient httpClient)
     private const string BaseUrl = "https://api.deezer.com";
     private readonly Random _random = new();
     
-    public async Task<List<DeezerTrack>> GetTracksByGenreAsync(string genre, int limit = 10)
+    public async Task<List<DeezerTrack>> GetTracksByGenreAsync(string genre)
     {
         try
         {
+            var random = new Random();
+            var trackCount = random.Next(5, 16);
+            
             var chartResponse = await httpClient.GetFromJsonAsync<DeezerChartResponse>(
-                $"{BaseUrl}/editorial/{GetGenreCode(genre)}/charts?limit={limit}");
+                $"{BaseUrl}/editorial/{GetGenreCode(genre)}/charts?limit={trackCount}");
 
             var tracks = chartResponse?.Tracks.Data;
         
-            if (tracks != null && tracks.Count >= limit)
+            if (tracks != null && tracks.Count >= trackCount)
                 return tracks
                     .Where(t => !string.IsNullOrEmpty(t.Artist.Name) && !string.IsNullOrEmpty(t.Title))
-                    .Take(limit)
+                    .Take(trackCount)
                     .ToList();
             var searchResponse = await httpClient.GetFromJsonAsync<DeezerSearchResponse>(
-                $"{BaseUrl}/search?q=genre:\"{Uri.EscapeDataString(genre)}\"&limit={limit}&order=RANKING");
+                $"{BaseUrl}/search?q=genre:\"{Uri.EscapeDataString(genre)}\"&limit={trackCount}&order=RANKING");
             
             tracks = searchResponse?.Data;
 
             return tracks?
                 .Where(t => !string.IsNullOrEmpty(t.Artist.Name) && !string.IsNullOrEmpty(t.Title))
-                .Take(limit)
+                .Take(trackCount)
                 .ToList() ?? [];
         }
         catch (Exception ex)

@@ -43,18 +43,15 @@ export const GamePage = () => {
                 const fetchedUser = await fetchAuthUserData();
                 const loggedUser: User = fetchedUser as User;
 
-                // Подписываемся на получение статуса хоста
                 connection.on("ReceiveHostStatus", (isHost: boolean) => {
                     setIsHost(isHost);
                     setIsHostChecked(true);
 
-                    // Только после проверки статуса начинаем игру
                     if (isHost) {
                         connection.invoke("GetNextQuestion", gameId);
                     }
                 });
 
-                // Запрашиваем проверку статуса
                 connection.invoke("IsUserHost", gameId, loggedUser.userId);
 
             } catch (error) {
@@ -105,9 +102,6 @@ export const GamePage = () => {
             }
             navigate(`/game-results/${gameId}`, { state: { scores: finalScores } });
         });
-
-        // Таймер запускается только после получения первого вопроса
-        // через событие NextQuestion
 
         return () => {
             connection.off("NextQuestion");
