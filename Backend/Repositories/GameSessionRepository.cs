@@ -34,6 +34,16 @@ namespace Backend.Repositories
                 .Include(gs => gs.Questions)
                 .FirstOrDefaultAsync(gs => gs.Id == id);
         }
+        
+        public async Task<GameSession?> GetWithRoomPlayersAndQuestionsAsync(Guid id)
+        {
+            return await context.GameSessions
+                .Include(gs => gs.Room)
+                .ThenInclude(r => r.Players)
+                .ThenInclude(p => p.User)
+                .Include(gs => gs.Questions)
+                .FirstOrDefaultAsync(gs => gs.Id == id);
+        }
 
         public async Task AddAsync(GameSession gameSession)
         {
@@ -50,6 +60,7 @@ namespace Backend.Repositories
         public async Task EndGameSessionAsync(Guid gameSessionId)
         {
             var gameSession = await GetWithRoomAndPlayersAsync(gameSessionId);
+            
             if (gameSession != null)
             {
                 gameSession.Status = "Completed";

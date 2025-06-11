@@ -49,8 +49,7 @@ export const GameResultsPage = () => {
                     setLoading(false);
                 });
 
-                connection.on("Error", (errorMessage: string) => {
-                    setError(errorMessage);
+                connection.on("Error", () => {
                     setLoading(false);
                 });
 
@@ -59,14 +58,12 @@ export const GameResultsPage = () => {
                         connection.invoke("GetGameResults", gameId)
                             .catch(err => {
                                 console.error("Error fetching game results:", err);
-                                setError("Failed to get game results");
                                 setLoading(false);
                             });
                     } else {
                         // Non-host players wait for the host to send results
                         const timeout = setTimeout(() => {
                             if (!results) {
-                                setError("Waiting for game results...");
                                 setLoading(false);
                             }
                         }, 15000); // 15 seconds timeout
@@ -79,7 +76,6 @@ export const GameResultsPage = () => {
 
             } catch (error) {
                 console.error("Error initializing game:", error);
-                setError("Failed to initialize game");
                 setLoading(false);
             }
         };
@@ -92,7 +88,7 @@ export const GameResultsPage = () => {
             connection.off("Error");
         };
     }, [connection, gameId]);
-    
+
     const handleBackToHome = () => {
         navigate(`/home`);
     };

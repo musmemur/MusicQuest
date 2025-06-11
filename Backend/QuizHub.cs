@@ -9,10 +9,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Backend;
 
 public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
-    IGameSessionRepository gameSessionRepository,
-    IPlayerRepository playerRepository,
-    IUserRepository userRepository,
-    IRoomRepository roomRepository) : Hub
+    IGameSessionRepository gameSessionRepository, IPlayerRepository playerRepository,
+    IUserRepository userRepository, IRoomRepository roomRepository, 
+    IQuizQuestionRepository quizQuestionRepository, ITrackRepository trackRepository,
+    IPlaylistRepository playlistRepository, IPlaylistTrackRepository playlistTrackRepository) : Hub
 {
     public async Task JoinRoom(string roomId, string userId)
     {
@@ -145,7 +145,6 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
 
         await SendQuestionToGroup(gameSession.RoomId, gameSession.Id);
     }
-    
     public async Task<int> SubmitAnswer(string userId, string gameSessionId, int answerIndex, int questionIndex, int remainingTime)
     {
         try
@@ -185,15 +184,9 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
             throw new HubException(ex.Message);
         }
     } 
-    
-    //надо будет здесь удалять игроков + добавить, чтобы вызывался метод один раз хостом
     public async Task GetGameResults(string gameSessionId)
     {
-        var gameSession = await dbContext.GameSessions
-            .Include(gs => gs.Room)
-            .ThenInclude(r => r.Players)
-            .ThenInclude(p => p.User)
-            .FirstOrDefaultAsync(gs => gs.Id == Guid.Parse(gameSessionId));
+        var gameSession = await gameSessionRepository.GetWithRoomAndPlayersAsync(Guid.Parse(gameSessionId));
 
         if (gameSession == null)
             throw new HubException("Game session not found");
@@ -224,88 +217,81 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
         
         await Clients.Group(gameSession.RoomId.ToString()).SendAsync("ReceiveGameResults", results);
         
-        dbContext.Players.RemoveRange(gameSession.Room.Players);
-        await dbContext.SaveChangesAsync();
+        await playerRepository.RemoveRangeAsync(gameSession.Room.Players);
     }
 
     public async Task CreateWinnerPlaylist(string gameSessionId, string winnerId, string genre)
+{
+    var gameSessionGuid = Guid.Parse(gameSessionId);
+    var winnerIdGuid = Guid.Parse(winnerId);
+
+    await using var transaction = await dbContext.Database.BeginTransactionAsync();
+
+    try
     {
-        var gameSessionGuid = Guid.Parse(gameSessionId);
-        var winnerIdGuid = Guid.Parse(winnerId);
-
-        await using var transaction = await dbContext.Database.BeginTransactionAsync();
-
-        try
+        if (await playlistRepository.ExistsForGameSessionAsync(gameSessionGuid))
         {
-            var existingPlaylist = await dbContext.Playlists
-                .FirstOrDefaultAsync(p => p.GameSessionId == gameSessionGuid);
-
-            if (existingPlaylist != null)
-            {
-                await transaction.CommitAsync();
-            }
-
-            var tracks = await deezerClient.GetTracksByGenreAsync(genre);
-
-            var playlist = new Playlist(winnerIdGuid, $"Playlist of {genre} Music")
-            {
-                GameSessionId = gameSessionGuid,
-                PlaylistTracks = []
-            };
-
-            var trackEntities = new List<Track>();
-            foreach (var deezerTrack in tracks)
-            {
-                var existingTrack = await dbContext.Tracks
-                    .FirstOrDefaultAsync(t => t.DeezerTrackId == deezerTrack.Id);
-
-                if (existingTrack == null)
-                {
-                    existingTrack = new Track
-                    {
-                        Id = Guid.NewGuid(),
-                        DeezerTrackId = deezerTrack.Id,
-                        Title = deezerTrack.Title,
-                        Artist = deezerTrack.Artist.Name,
-                        PreviewUrl = deezerTrack.Preview,
-                        CoverUrl = deezerTrack.Album.Cover
-                    };
-                    dbContext.Tracks.Add(existingTrack);
-                }
-                trackEntities.Add(existingTrack);
-            }
-
-            await dbContext.SaveChangesAsync();
-
-            foreach (var track in trackEntities)
-            {
-                playlist.PlaylistTracks.Add(new PlaylistTrack
-                {
-                    TrackId = track.Id,
-                    Track = track
-                });
-            }
-
-            dbContext.Playlists.Add(playlist);
-            await dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
+            return;
+        }
 
-        }
-        catch
+        var tracks = await deezerClient.GetTracksByGenreAsync(genre);
+        
+        var playlist = new Playlist(winnerIdGuid, $"Playlist of {genre} Music")
         {
-            await transaction.RollbackAsync();
-            throw;
+            GameSessionId = gameSessionGuid
+        };
+        
+        await playlistRepository.AddAsync(playlist);
+        
+        var trackEntities = new List<Track>();
+        var newTracks = new List<Track>();
+        
+        foreach (var deezerTrack in tracks)
+        {
+            var existingTrack = await trackRepository.GetByDeezerIdAsync(deezerTrack.Id);
+            
+            if (existingTrack == null)
+            {
+                existingTrack = new Track
+                {
+                    Id = Guid.NewGuid(),
+                    DeezerTrackId = deezerTrack.Id,
+                    Title = deezerTrack.Title,
+                    Artist = deezerTrack.Artist.Name,
+                    PreviewUrl = deezerTrack.Preview,
+                    CoverUrl = deezerTrack.Album.Cover
+                };
+                newTracks.Add(existingTrack);
+            }
+            trackEntities.Add(existingTrack);
         }
+
+        if (newTracks.Count != 0)
+        {
+            await trackRepository.AddRangeAsync(newTracks);
+        }
+
+        var playlistTracks = trackEntities.Select(track => new PlaylistTrack
+        {
+            PlaylistId = playlist.Id,
+            TrackId = track.Id,
+            Track = track
+        }).ToList();
+
+        await playlistTrackRepository.AddRangeAsync(playlistTracks);
+
+        await transaction.CommitAsync();
     }
-    
+    catch (Exception ex)
+    {
+        await transaction.RollbackAsync();
+        throw new HubException($"Failed to create playlist: {ex.Message}");
+    }
+}    
     public async Task EndGame(string gameSessionId)
     {
-        var gameSession = await dbContext.GameSessions
-            .Include(gs => gs.Room)
-            .ThenInclude(r => r.Players)
-            .ThenInclude(p => p.User)
-            .Include(gs => gs.Questions) // Добавляем включение вопросов
-            .FirstOrDefaultAsync(gs => gs.Id == Guid.Parse(gameSessionId));
+        var gameSession = await gameSessionRepository.GetWithRoomPlayersAndQuestionsAsync(Guid.Parse(gameSessionId));
 
         if (gameSession == null) return;
 
@@ -322,18 +308,13 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
                 p => new { p.User.Username, p.User.UserPhoto, p.Score })
         });
 
-        dbContext.QuizQuestions.RemoveRange(gameSession.Questions);
-        gameSession.Status = "Completed";
-        gameSession.Room.IsActive = false;
-        await dbContext.SaveChangesAsync();
+        await quizQuestionRepository.RemoveRangeAsync(gameSession.Questions);
+        await gameSessionRepository.EndGameSessionAsync(gameSession.Id);
     }
     
     public async Task IsUserHost(string gameSessionId, string userId)
     {
-        var gameSession = await dbContext.GameSessions
-            .Include(gs => gs.Room)
-            .Include(gs => gs.Questions)
-            .FirstOrDefaultAsync(gs => gs.Id == Guid.Parse(gameSessionId));
+        var gameSession = await gameSessionRepository.GetWithRoomAndQuestionsAsync(Guid.Parse(gameSessionId));
         
         if (gameSession == null)
         {
