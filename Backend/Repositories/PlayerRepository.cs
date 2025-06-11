@@ -56,6 +56,6 @@ public class PlayerRepository(AppDbContext dbContext): IPlayerRepository
     public async Task RemoveRangeAsync(IEnumerable<Player> players)
     {
         dbContext.Players.RemoveRange(players);
-        await Task.CompletedTask;
+        await dbContext.SaveChangesAsync();
     }
 }

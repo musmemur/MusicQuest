@@ -221,74 +221,74 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
     }
 
     public async Task CreateWinnerPlaylist(string gameSessionId, string winnerId, string genre)
-{
-    var gameSessionGuid = Guid.Parse(gameSessionId);
-    var winnerIdGuid = Guid.Parse(winnerId);
-
-    await using var transaction = await dbContext.Database.BeginTransactionAsync();
-
-    try
     {
-        if (await playlistRepository.ExistsForGameSessionAsync(gameSessionGuid))
-        {
-            await transaction.CommitAsync();
-            return;
-        }
+        var gameSessionGuid = Guid.Parse(gameSessionId);
+        var winnerIdGuid = Guid.Parse(winnerId);
 
-        var tracks = await deezerClient.GetTracksByGenreAsync(genre);
-        
-        var playlist = new Playlist(winnerIdGuid, $"Playlist of {genre} Music")
+        await using var transaction = await dbContext.Database.BeginTransactionAsync();
+
+        try
         {
-            GameSessionId = gameSessionGuid
-        };
-        
-        await playlistRepository.AddAsync(playlist);
-        
-        var trackEntities = new List<Track>();
-        var newTracks = new List<Track>();
-        
-        foreach (var deezerTrack in tracks)
-        {
-            var existingTrack = await trackRepository.GetByDeezerIdAsync(deezerTrack.Id);
-            
-            if (existingTrack == null)
+            if (await playlistRepository.ExistsForGameSessionAsync(gameSessionGuid))
             {
-                existingTrack = new Track
-                {
-                    Id = Guid.NewGuid(),
-                    DeezerTrackId = deezerTrack.Id,
-                    Title = deezerTrack.Title,
-                    Artist = deezerTrack.Artist.Name,
-                    PreviewUrl = deezerTrack.Preview,
-                    CoverUrl = deezerTrack.Album.Cover
-                };
-                newTracks.Add(existingTrack);
+                await transaction.CommitAsync();
+                return;
             }
-            trackEntities.Add(existingTrack);
+
+            var tracks = await deezerClient.GetTracksByGenreAsync(genre);
+            
+            var playlist = new Playlist(winnerIdGuid, $"Playlist of {genre} Music")
+            {
+                GameSessionId = gameSessionGuid
+            };
+            
+            await playlistRepository.AddAsync(playlist);
+            
+            var trackEntities = new List<Track>();
+            var newTracks = new List<Track>();
+            
+            foreach (var deezerTrack in tracks)
+            {
+                var existingTrack = await trackRepository.GetByDeezerIdAsync(deezerTrack.Id);
+                
+                if (existingTrack == null)
+                {
+                    existingTrack = new Track
+                    {
+                        Id = Guid.NewGuid(),
+                        DeezerTrackId = deezerTrack.Id,
+                        Title = deezerTrack.Title,
+                        Artist = deezerTrack.Artist.Name,
+                        PreviewUrl = deezerTrack.Preview,
+                        CoverUrl = deezerTrack.Album.Cover
+                    };
+                    newTracks.Add(existingTrack);
+                }
+                trackEntities.Add(existingTrack);
+            }
+
+            if (newTracks.Count != 0)
+            {
+                await trackRepository.AddRangeAsync(newTracks);
+            }
+
+            var playlistTracks = trackEntities.Select(track => new PlaylistTrack
+            {
+                PlaylistId = playlist.Id,
+                TrackId = track.Id,
+                Track = track
+            }).ToList();
+
+            await playlistTrackRepository.AddRangeAsync(playlistTracks);
+
+            await transaction.CommitAsync();
         }
-
-        if (newTracks.Count != 0)
+        catch (Exception ex)
         {
-            await trackRepository.AddRangeAsync(newTracks);
+            await transaction.RollbackAsync();
+            throw new HubException($"Failed to create playlist: {ex.Message}");
         }
-
-        var playlistTracks = trackEntities.Select(track => new PlaylistTrack
-        {
-            PlaylistId = playlist.Id,
-            TrackId = track.Id,
-            Track = track
-        }).ToList();
-
-        await playlistTrackRepository.AddRangeAsync(playlistTracks);
-
-        await transaction.CommitAsync();
-    }
-    catch (Exception ex)
-    {
-        await transaction.RollbackAsync();
-        throw new HubException($"Failed to create playlist: {ex.Message}");
-    }
-}    
+    }    
     public async Task EndGame(string gameSessionId)
     {
         var gameSession = await gameSessionRepository.GetWithRoomPlayersAndQuestionsAsync(Guid.Parse(gameSessionId));
@@ -327,34 +327,46 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
     
     // public override async Task OnDisconnectedAsync(Exception? exception)
     // {
-    //     var connectionId = Context.ConnectionId;
-    //
-    //     var playerConnection = await dbContext.PlayerConnections
-    //         .Include(pc => pc.Player)
-    //         .FirstOrDefaultAsync(pc => pc.ConnectionId == connectionId);
-    //
-    //     if (playerConnection != null)
+    //     try
     //     {
-    //         var player = playerConnection.Player;
-    //         var roomId = player.RoomId.ToString();
+    //         var connectionId = Context.ConnectionId;
     //     
-    //         // Удаляем связь соединения с игроком
-    //         dbContext.PlayerConnections.Remove(playerConnection);
+    //         // Находим игрока по connectionId (если у вас есть такая связь)
+    //         var player = await playerRepository.GetPlayerByConnectionIdAsync(connectionId);
     //     
-    //         // Проверяем, есть ли у игрока другие активные соединения
-    //         var hasOtherConnections = await dbContext.PlayerConnections
-    //             .AnyAsync(pc => pc.PlayerId == player.Id);
-    //         
-    //         if (!hasOtherConnections)
+    //         if (player != null)
     //         {
-    //             // Удаляем игрока, если это его последнее соединение
-    //             dbContext.Players.Remove(player);
-    //             await Clients.Group(roomId).SendAsync("PlayerLeft", player.UserId.ToString());
+    //             var roomId = player.RoomId.ToString();
+    //             var userId = player.UserId.ToString();
+    //         
+    //             // Удаляем игрока
+    //             await playerRepository.RemoveAsync(player);
+    //         
+    //             // Проверяем, остались ли игроки в комнате
+    //             var playersInRoom = await playerRepository.GetPlayersByRoomAsync(player.RoomId);
+    //         
+    //             if (!playersInRoom.Any())
+    //             {
+    //                 // Если комната пуста, удаляем её
+    //                 var room = await roomRepository.GetByIdAsync(player.RoomId);
+    //                 if (room != null)
+    //                 {
+    //                     await roomRepository.RemoveAsync(room);
+    //                 }
+    //             }
+    //             else
+    //             {
+    //                 // Уведомляем других игроков о выходе
+    //                 await Clients.Group(roomId).SendAsync("PlayerLeft", userId);
+    //             }
     //         }
-    //     
-    //         await dbContext.SaveChangesAsync();
-    //     }
     //
-    //     await base.OnDisconnectedAsync(exception);
+    //         await base.OnDisconnectedAsync(exception);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine($"Error in OnDisconnectedAsync: {ex.Message}");
+    //         await base.OnDisconnectedAsync(exception);
+    //     }
     // }
 }
