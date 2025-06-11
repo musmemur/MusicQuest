@@ -43,28 +43,33 @@ export const GameResultsPage = () => {
 
                 connection.on("ReceiveGameResults", (serverResults: GameResultsDto) => {
                     setResults(serverResults);
-
                     if (loggedUser) {
                         setIsWinner(serverResults.winnerId === loggedUser.userId);
                     }
                     setLoading(false);
                 });
 
+                connection.on("Error", (errorMessage: string) => {
+                    setError(errorMessage);
+                    setLoading(false);
+                });
+
                 connection.on("ReceiveHostStatus", (isHost: boolean) => {
-                    
                     if (isHost) {
                         connection.invoke("GetGameResults", gameId)
                             .catch(err => {
                                 console.error("Error fetching game results:", err);
+                                setError("Failed to get game results");
                                 setLoading(false);
                             });
                     } else {
+                        // Non-host players wait for the host to send results
                         const timeout = setTimeout(() => {
                             if (!results) {
-                                console.warn("Game results not received in time");
+                                setError("Waiting for game results...");
                                 setLoading(false);
                             }
-                        }, 10000); 
+                        }, 15000); // 15 seconds timeout
 
                         return () => clearTimeout(timeout);
                     }
@@ -74,6 +79,7 @@ export const GameResultsPage = () => {
 
             } catch (error) {
                 console.error("Error initializing game:", error);
+                setError("Failed to initialize game");
                 setLoading(false);
             }
         };
@@ -83,8 +89,9 @@ export const GameResultsPage = () => {
         return () => {
             connection.off("ReceiveHostStatus");
             connection.off("ReceiveGameResults");
+            connection.off("Error");
         };
-    }, [connection, gameId, results]);
+    }, [connection, gameId]);
     
     const handleBackToHome = () => {
         navigate(`/home`);

@@ -24,13 +24,13 @@ export const GamePage = () => {
     const connection = useSignalR();
     const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(null);
     const [score, setScore] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(10);
+    const [timeLeft, setTimeLeft] = useState(5);
     const [totalQuestions, setTotalQuestions] = useState(0);
     const [questionIndex, setQuestionIndex] = useState(0);
     const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
     const navigate = useNavigate();
-    const questionTimerRef = useRef(10);
-    const countdownTimerRef = useRef(10);
+    const questionTimerRef = useRef(5);
+    const countdownTimerRef = useRef(5);
     const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
     const [isHost, setIsHost] = useState(false);
     const [isHostChecked, setIsHostChecked] = useState(false);
@@ -78,7 +78,7 @@ export const GamePage = () => {
                 if (isHost) {
                     connection.invoke("GetNextQuestion", gameId);
                 }
-            }, 10000);
+            }, 5000);
         };
 
         connection.on("NextQuestion", (question: QuizQuestion & {
@@ -86,7 +86,7 @@ export const GamePage = () => {
             totalQuestions: number
         }) => {
             setCurrentQuestion(question);
-            setTimeLeft(10);
+            setTimeLeft(5);
             setQuestionIndex(question.questionIndex + 1);
             setTotalQuestions(question.totalQuestions);
             setIsAnswerSubmitted(false);
@@ -121,7 +121,7 @@ export const GamePage = () => {
         }
 
         if (currentQuestion) {
-            setTimeLeft(10);
+            setTimeLeft(5);
 
             countdownTimerRef.current = setInterval(() => {
                 setTimeLeft(prev => {
@@ -131,7 +131,7 @@ export const GamePage = () => {
                     }
                     return prev - 1;
                 });
-            }, 1000);
+            }, 500);
         }
 
         return () => {

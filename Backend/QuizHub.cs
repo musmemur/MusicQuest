@@ -2,37 +2,35 @@
 using Backend.DataBase;
 using Backend.Dto;
 using Backend.Entities;
+using Backend.Repositories;
 using Backend.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend;
 
-public class QuizHub(DeezerApiClient deezerClient, 
-    AppDbContext dbContext) : Hub
+public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
+    IGameSessionRepository gameSessionRepository,
+    IPlayerRepository playerRepository,
+    IUserRepository userRepository,
+    IRoomRepository roomRepository) : Hub
 {
     public async Task JoinRoom(string roomId, string userId)
     {
-        var roomExists = await dbContext.Rooms.AnyAsync(r => r.Id == Guid.Parse(roomId));
-        if (!roomExists)
+        var roomExists = await roomRepository.GetByIdAsync(Guid.Parse(roomId));
+        if (roomExists == null)
         {
             await Clients.Caller.SendAsync("Error", "Room not found");
             return;
         }
 
-        //надо переделать передачу данных о пользователе
-        var user = await dbContext.Users
-            .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
-        
+        var user = await userRepository.GetByIdAsync(Guid.Parse(userId));
         if (user == null)
         {
             await Clients.Caller.SendAsync("Error", "User not found");
             return;
         }
         
-        //проверить на это
-        var alreadyJoined = await dbContext.Players
-            .AnyAsync(p => p.RoomId == Guid.Parse(roomId) && p.UserId == Guid.Parse(userId));
-
+        var alreadyJoined = await playerRepository.PlayerExistsInRoomAsync(Guid.Parse(userId), Guid.Parse(roomId));
         if (!alreadyJoined)
         {
             var player = new Player
@@ -43,23 +41,20 @@ public class QuizHub(DeezerApiClient deezerClient,
                 Score = 0
             };
 
-            dbContext.Players.Add(player);
-            await dbContext.SaveChangesAsync();
+            await playerRepository.AddAsync(player);
         }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
         
-        var players = await dbContext.Players
-            .Where(p => p.RoomId == Guid.Parse(roomId))
-            .Select(p => new {
-                p.UserId,
-                p.User.Username,
-                p.User.UserPhoto,
-                p.Score
-            })
-            .ToListAsync();
+        var players = await playerRepository.GetPlayersByRoomAsync(Guid.Parse(roomId));
+        var playerDtos = players.Select(p => new {
+            UserId = p.UserId.ToString(),
+            p.User.Username,
+            p.User.UserPhoto,
+            p.Score
+        }).ToList();
         
-        await Clients.Caller.SendAsync("ReceivePlayersList", players);
+        await Clients.Caller.SendAsync("ReceivePlayersList", playerDtos);
     
         await Clients.OthersInGroup(roomId).SendAsync("PlayerJoined", new {
             UserId = userId,
@@ -67,8 +62,7 @@ public class QuizHub(DeezerApiClient deezerClient,
             UserPhoto = user.UserPhoto,
             Score = 0
         });
-    }
-    
+    }    
     public async Task StartGame(string roomId)
     {
         var room = await dbContext.Rooms
