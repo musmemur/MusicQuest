@@ -241,6 +241,10 @@ public class QuizHub(DeezerApiClient deezerClient,
         };
         
         await Clients.Group(gameSession.RoomId.ToString()).SendAsync("ReceiveGameResults", results);
+        
+        dbContext.Players.RemoveRange(gameSession.Room.Players);
+        dbContext.GameSessions.Remove(gameSession);
+        await dbContext.SaveChangesAsync();
     }
 
     public async Task CreateWinnerPlaylist(string gameSessionId, string winnerId, string genre)

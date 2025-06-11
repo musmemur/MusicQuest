@@ -132,7 +132,7 @@ export const GameResultsPage = () => {
                                 onClick={() => navigate(`/user/${currentUser?.userId}`)}
                                 className="view-playlist-btn"
                             >
-                                View Your Playlist
+                                View Your Playlists
                             </button>
                         </div>
                     )}
