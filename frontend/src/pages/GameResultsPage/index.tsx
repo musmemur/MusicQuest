@@ -1,4 +1,4 @@
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useSignalR } from "../../app/signalRContext.tsx";
 import { fetchAuthUserData } from "../../processes/fetchAuthUserData.ts";
@@ -25,7 +25,6 @@ export type GameResultsDto = {
 
 export const GameResultsPage = () => {
     const { gameId } = useParams();
-    const location = useLocation();
     const navigate = useNavigate();
     const connection = useSignalR();
     const [results, setResults] = useState<GameResultsDto | null>(null);
@@ -34,29 +33,59 @@ export const GameResultsPage = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (connection && gameId) {
-            connection.invoke("GetGameResults", gameId)
-                .then((serverResults: GameResultsDto) => {
+        if (!connection || !gameId) return;
+
+        const initializeGame = async () => {
+            try {
+                const fetchedUser = await fetchAuthUserData();
+                const loggedUser: User = fetchedUser as User;
+                setCurrentUser(loggedUser);
+
+                connection.on("ReceiveGameResults", (serverResults: GameResultsDto) => {
                     setResults(serverResults);
-                    setLoading(false);
-                })
-                .catch(err => {
-                    console.error("Error fetching game results:", err);
+
+                    if (loggedUser) {
+                        setIsWinner(serverResults.winnerId === loggedUser.userId);
+                    }
                     setLoading(false);
                 });
-        }
 
-        fetchAuthUserData()
-            .then(user => {
-                const authUser = user as User;
-                setCurrentUser(authUser);
-                if (results && authUser) {
-                    setIsWinner(results.winnerId === authUser.userId);
-                }
-            })
-            .catch(() => navigate('/sign-up/login'));
-    }, [connection, gameId, location.state]);
+                connection.on("ReceiveHostStatus", (isHost: boolean) => {
+                    
+                    if (isHost) {
+                        connection.invoke("GetGameResults", gameId)
+                            .catch(err => {
+                                console.error("Error fetching game results:", err);
+                                setLoading(false);
+                            });
+                    } else {
+                        const timeout = setTimeout(() => {
+                            if (!results) {
+                                console.warn("Game results not received in time");
+                                setLoading(false);
+                            }
+                        }, 10000); 
 
+                        return () => clearTimeout(timeout);
+                    }
+                });
+
+                connection.invoke("IsUserHost", gameId, loggedUser.userId);
+
+            } catch (error) {
+                console.error("Error initializing game:", error);
+                setLoading(false);
+            }
+        };
+
+        initializeGame();
+
+        return () => {
+            connection.off("ReceiveHostStatus");
+            connection.off("ReceiveGameResults");
+        };
+    }, [connection, gameId, results]);
+    
     const handleBackToHome = () => {
         navigate(`/home`);
     };

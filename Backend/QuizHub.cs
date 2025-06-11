@@ -205,7 +205,7 @@ public class QuizHub(DeezerApiClient deezerClient,
     } 
     
     //надо будет здесь удалять игроков + добавить, чтобы вызывался метод один раз хостом
-    public async Task<GameResultDto> GetGameResults(string gameSessionId)
+    public async Task GetGameResults(string gameSessionId)
     {
         var gameSession = await dbContext.GameSessions
             .Include(gs => gs.Room)
@@ -230,7 +230,7 @@ public class QuizHub(DeezerApiClient deezerClient,
                     Score = p.Score
                 });
 
-        return new GameResultDto
+        var results = new GameResultDto
         {
             GameId = gameSession.Id,
             RoomId = gameSession.RoomId,
@@ -239,6 +239,8 @@ public class QuizHub(DeezerApiClient deezerClient,
             WinnerName = winner.User.Username,
             Scores = scores
         };
+        
+        await Clients.Group(gameSession.RoomId.ToString()).SendAsync("ReceiveGameResults", results);
     }
 
     public async Task CreateWinnerPlaylist(string gameSessionId, string winnerId, string genre)
