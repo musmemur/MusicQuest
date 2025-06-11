@@ -37,6 +37,12 @@ namespace Backend.Repositories
             context.Rooms.Update(room);
             await context.SaveChangesAsync();
         }
+        
+        public async Task RemoveAsync(Room room)
+        { 
+            context.Rooms.Remove(room);
+            await context.SaveChangesAsync();
+        }
 
         public async Task<Room?> GetRoomWithPlayersAsync(Guid roomId)
         {

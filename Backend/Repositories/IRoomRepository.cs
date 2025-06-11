@@ -11,6 +11,8 @@ namespace Backend.Repositories
         Task<IEnumerable<RoomDto>> GetActiveRoomsAsync();
         Task AddAsync(Room room);
         Task UpdateAsync(Room room);
+        Task RemoveAsync(Room room);
+
         Task<Room?> GetRoomWithPlayersAsync(Guid roomId);
         Task<bool> IsUserInRoomAsync(Guid roomId, Guid userId);
     }

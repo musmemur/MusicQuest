@@ -1,7 +1,4 @@
 ﻿using Backend.DataBase;
-using Backend.Entities;
-using Backend.Modals;
-using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

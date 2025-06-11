@@ -141,6 +141,32 @@ export const GamePage = () => {
         };
     }, [currentQuestion]);
 
+    useEffect(() => {
+        if (!connection) return;
+
+        connection.on("PlayerLeft", (userId: string) => {
+            console.log(`Player ${userId} left the game`);
+        });
+
+        connection.on("NewHostAssigned", async (newHostId: string) => {
+            console.log(`New host assigned: ${newHostId}`);
+            const fetchedUser = await fetchAuthUserData();
+            const loggedUser: User = fetchedUser as User;
+            setIsHost(loggedUser.userId === newHostId);
+        });
+
+        connection.on("ConnectionLost", () => {
+            alert("Connection to the game server was lost. You will be redirected to the main page.");
+            navigate("/");
+        });
+
+        return () => {
+            connection.off("PlayerLeft");
+            connection.off("NewHostAssigned");
+            connection.off("ConnectionLost");
+        };
+    }, [connection, navigate]);
+
     const handleAnswer = async (answerIndex: number) => {
         if (!connection || !gameId || !currentQuestion || isAnswerSubmitted) return;
         setIsAnswerSubmitted(true);

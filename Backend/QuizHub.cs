@@ -4,7 +4,6 @@ using Backend.Dto;
 using Backend.Entities;
 using Backend.Repositories;
 using Backend.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace Backend;
 
@@ -330,21 +329,20 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
     //     try
     //     {
     //         var connectionId = Context.ConnectionId;
-    //     
-    //         // Находим игрока по connectionId (если у вас есть такая связь)
-    //         var player = await playerRepository.GetPlayerByConnectionIdAsync(connectionId);
-    //     
+    //         
+    //         var allPlayers = await playerRepository.GetAllAsync();
+    //         
+    //         var player = allPlayers.FirstOrDefault(p => p.UserId.ToString() == Context.UserIdentifier);
+    //         
     //         if (player != null)
     //         {
     //             var roomId = player.RoomId.ToString();
     //             var userId = player.UserId.ToString();
-    //         
-    //             // Удаляем игрока
+    //             
     //             await playerRepository.RemoveAsync(player);
-    //         
-    //             // Проверяем, остались ли игроки в комнате
+    //             
     //             var playersInRoom = await playerRepository.GetPlayersByRoomAsync(player.RoomId);
-    //         
+    //             
     //             if (!playersInRoom.Any())
     //             {
     //                 // Если комната пуста, удаляем её
@@ -356,9 +354,20 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
     //             }
     //             else
     //             {
-    //                 // Уведомляем других игроков о выходе
     //                 await Clients.Group(roomId).SendAsync("PlayerLeft", userId);
+    //                 
+    //                 var room = await roomRepository.GetByIdAsync(player.RoomId);
+    //                 if (room != null && room.HostUserId == player.UserId)
+    //                 {
+    //                     var newHost = playersInRoom.First();
+    //                     room.HostUserId = newHost.UserId;
+    //                     await roomRepository.UpdateAsync(room);
+    //                     
+    //                     await Clients.Group(roomId).SendAsync("NewHostAssigned", newHost.UserId.ToString());
+    //                 }
     //             }
+    //             
+    //             await Groups.RemoveFromGroupAsync(connectionId, roomId);
     //         }
     //
     //         await base.OnDisconnectedAsync(exception);

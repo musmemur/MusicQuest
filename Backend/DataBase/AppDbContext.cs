@@ -21,9 +21,8 @@ public class AppDbContext(IConfiguration configuration) : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Конфигурация связи many-to-many
         modelBuilder.Entity<PlaylistTrack>()
-            .HasKey(pt => new { pt.PlaylistId, pt.TrackId }); // Составной ключ
+            .HasKey(pt => new { pt.PlaylistId, pt.TrackId }); 
 
         modelBuilder.Entity<PlaylistTrack>()
             .HasOne(pt => pt.Playlist)
@@ -37,42 +36,36 @@ public class AppDbContext(IConfiguration configuration) : DbContext
             .HasForeignKey(pt => pt.TrackId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Связь User-Playlist (one-to-many)
         modelBuilder.Entity<Playlist>()
-            .HasOne<User>() // Указываем тип сущности User
-            .WithMany(u => u.Playlists) // Указываем навигационное свойство
+            .HasOne<User>() 
+            .WithMany(u => u.Playlists) 
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
         
-        // User-Room (один пользователь может создать много комнат)
         modelBuilder.Entity<Room>()
             .HasOne(r => r.HostUser)
-            .WithMany() // У User нет обратной навигации на Room
+            .WithMany() 
             .HasForeignKey(r => r.HostUserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Room-Player (в комнате много игроков)
         modelBuilder.Entity<Player>()
             .HasOne(p => p.Room)
             .WithMany(r => r.Players)
             .HasForeignKey(p => p.RoomId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Player-User (игрок — это пользователь)
         modelBuilder.Entity<Player>()
             .HasOne(p => p.User)
-            .WithMany() // У User нет обратной навигации на Player
+            .WithMany() 
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Room-GameSession (у комнаты одна активная сессия)
         modelBuilder.Entity<GameSession>()
             .HasOne(gs => gs.Room)
-            .WithMany() // У Room нет обратной навигации на GameSession
+            .WithMany() 
             .HasForeignKey(gs => gs.RoomId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // GameSession-QuizQuestion (в сессии много вопросов)
         modelBuilder.Entity<QuizQuestion>()
             .HasOne(q => q.GameSession)
             .WithMany(gs => gs.Questions)

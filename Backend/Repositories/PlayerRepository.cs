@@ -6,6 +6,8 @@ namespace Backend.Repositories;
 
 public class PlayerRepository(AppDbContext dbContext): IPlayerRepository
 {
+    private IPlayerRepository _playerRepositoryImplementation;
+
     public async Task<Player?> GetByIdAsync(Guid id)
     {
         return await dbContext.Players
@@ -27,6 +29,11 @@ public class PlayerRepository(AppDbContext dbContext): IPlayerRepository
         return await dbContext.Players
             .Include(p => p.User)
             .FirstOrDefaultAsync(p => p.UserId == userId && p.RoomId == roomId);
+    }
+
+    public async Task<IEnumerable<Player>> GetAllAsync()
+    {
+        return await dbContext.Players.ToListAsync();
     }
 
     public async Task<bool> PlayerExistsInRoomAsync(Guid userId, Guid roomId)

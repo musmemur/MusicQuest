@@ -3,17 +3,16 @@ using Minio;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace Backend.Services;
 
-public static class ImageSaver
+public class ImageSaver(IOptions<MinioSettings> settings)
 {
-    public static async Task<string> SaveImageToS3(byte[] imageBytes, string mimeType, string bucketName)
-    {
-        const string endpoint = "127.0.0.1:9000";
-        const string accessKey = "admin";
-        const string secretKey = "password";
+    private readonly MinioSettings _settings = settings.Value;
 
+    public async Task<string> SaveImageToS3(byte[] imageBytes, string mimeType, string bucketName)
+    {
         var fileExtension = mimeType switch
         {
             "image/png" => ".png",
@@ -27,8 +26,9 @@ public static class ImageSaver
 
         // Создаем клиент MinIO
         var minioClient = new MinioClient()
-            .WithEndpoint(endpoint)
-            .WithCredentials(accessKey, secretKey)
+            .WithEndpoint(_settings.Endpoint)
+            .WithCredentials(_settings.AccessKey, _settings.SecretKey)
+            .WithSSL(_settings.UseSsl)
             .Build();
 
         using var memoryStream = new MemoryStream(imageBytes);
@@ -39,6 +39,6 @@ public static class ImageSaver
             .WithObjectSize(memoryStream.Length)
             .WithContentType(mimeType));
 
-        return $"http://{endpoint}/{bucketName}/{uniqueFileName}"; 
+        return $"http://{_settings.Endpoint}/{bucketName}/{uniqueFileName}"; 
     }
 }

@@ -14,7 +14,7 @@ namespace Backend.Controllers;
 [ApiController]
 [Route("[controller]")]
 public class UserController(IUserRepository userRepository, JwtService jwtService, 
-    IPasswordHasher<User> passwordHasher) : ControllerBase
+    IPasswordHasher<User> passwordHasher, ImageSaver imageSaver) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserRequest request, CancellationToken ct)
@@ -33,7 +33,7 @@ public class UserController(IUserRepository userRepository, JwtService jwtServic
 
                 var imageBytes = Convert.FromBase64String(base64Data);
 
-                var photoPath = await ImageSaver.SaveImageToS3(imageBytes, mimeType, "soundquestphotos");
+                var photoPath = await imageSaver.SaveImageToS3(imageBytes, mimeType, "soundquestphotos");
                 request.UserPhoto.FileName = photoPath;
                 request.UserPhoto.Data = null;
             }

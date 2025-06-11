@@ -40,6 +40,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddControllers();
 builder.Services.AddScoped<AppDbContext>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<ImageSaver>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
@@ -52,6 +53,7 @@ builder.Services.AddScoped<ITrackRepository, TrackRepository>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddHttpClient<DeezerApiClient>();
+builder.Services.Configure<MinioSettings>(builder.Configuration.GetSection("Minio"));
 builder.Services
     .AddSignalR()
     .AddJsonProtocol()
