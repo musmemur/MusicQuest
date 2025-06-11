@@ -43,6 +43,7 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
 builder.Services.AddScoped<IGameSessionRepository, GameSessionRepository>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<UserService>();

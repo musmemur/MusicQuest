@@ -1,18 +1,17 @@
 ﻿using Backend.Entities;
 using Backend.DataBase;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
 
 namespace Backend.Repositories
 {
     public class GameSessionRepository(AppDbContext context) : IGameSessionRepository
     {
-        public async Task<GameSession> GetByIdAsync(Guid id)
+        public async Task<GameSession?> GetByIdAsync(Guid id)
         {
             return await context.GameSessions.FindAsync(id);
         }
 
-        public async Task<GameSession> GetWithRoomAndPlayersAsync(Guid id)
+        public async Task<GameSession?> GetWithRoomAndPlayersAsync(Guid id)
         {
             return await context.GameSessions
                 .Include(gs => gs.Room)
@@ -21,7 +20,7 @@ namespace Backend.Repositories
                 .FirstOrDefaultAsync(gs => gs.Id == id);
         }
 
-        public async Task<GameSession> GetWithQuestionsAsync(Guid id)
+        public async Task<GameSession?> GetWithQuestionsAsync(Guid id)
         {
             return await context.GameSessions
                 .Include(gs => gs.Questions)

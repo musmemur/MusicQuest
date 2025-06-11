@@ -1,18 +1,15 @@
 ﻿using System.Security.Claims;
-using Backend.DataBase;
 using Backend.Dto;
 using Backend.Entities;
 using Backend.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/rooms")]
-public class RoomsController(AppDbContext dbContext, IRoomRepository roomRepository) : ControllerBase
+public class RoomsController(IRoomRepository roomRepository, IPlayerRepository playerRepository) : ControllerBase
 {
     // GET: api/rooms
     [HttpGet]
@@ -53,8 +50,7 @@ public class RoomsController(AppDbContext dbContext, IRoomRepository roomReposit
         };
 
         await roomRepository.AddAsync(room);
-        dbContext.Players.Add(player);
-        await dbContext.SaveChangesAsync();
+        await playerRepository.AddAsync(player);
     
         return Ok(new { roomId = room.Id.ToString() });
     }

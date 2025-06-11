@@ -11,7 +11,6 @@ interface Player {
     userId: string;
     username: string;
     userPhoto?: string;
-    score: number;
 }
 
 export const WaitingRoomPage = () => {
