@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Backend.DataBase;
 using Backend.Entities;
 using Backend.Modals;
+using Backend.Repositories;
 using Backend.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,13 +13,13 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class UserController(AppDbContext dbContext, JwtService jwtService, 
-    IPasswordHasher<User> passwordHasher, UserService userService) : ControllerBase
+public class UserController(IUserRepository userRepository, JwtService jwtService, 
+    IPasswordHasher<User> passwordHasher) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserRequest request, CancellationToken ct)
     {
-        if (await dbContext.Users.AnyAsync(u => u.Username == request.Username, ct))
+        if (await userRepository.UsernameExistsAsync(request.Username))
         {
             return BadRequest("Пользователь с таким логином уже существует");
         }
@@ -49,8 +50,7 @@ public class UserController(AppDbContext dbContext, JwtService jwtService,
             hashedPassword, 
             request.UserPhoto?.FileName);
 
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync(ct); 
+        await userRepository.AddAsync(user);
 
         var token = await jwtService.GenerateJwtTokenAsync(user.Id, ct);
     
@@ -60,10 +60,7 @@ public class UserController(AppDbContext dbContext, JwtService jwtService,
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
-        var userInfo = await dbContext.Users
-            .Where(u => u.Username == request.Username)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(ct);
+        var userInfo = await userRepository.GetByUsernameAsync(request.Username);
         
         if (userInfo == null)
         {
@@ -96,9 +93,7 @@ public class UserController(AppDbContext dbContext, JwtService jwtService,
 
         var guid = Guid.Parse(userId);
 
-        var user = await dbContext.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == guid, ct);
+        var user = await userRepository.GetByIdAsync(guid);
 
         if (user == null)
             return Unauthorized(new { message = "Пользователь не найден" });
@@ -108,41 +103,12 @@ public class UserController(AppDbContext dbContext, JwtService jwtService,
         return Ok(new AuthResult(token, user.Id, user.Username, user.UserPhoto));
     }
     
-    [HttpGet("get-user-with-playlists/{userId}")]
+    [HttpGet("get-user-with-playlists/{userId:guid}")]
     public async Task<IActionResult> GetUserWithPlaylists(
         Guid userId, 
         CancellationToken cancellationToken = default)
     {
-        var userInfo = await dbContext.Users
-            .Where(u => u.Id == userId)
-            .Include(u => u.Playlists)
-            .ThenInclude(p => p.PlaylistTracks)
-            .ThenInclude(pt => pt.Track)
-            .AsNoTracking()
-            .Select(u => new 
-            {
-                u.Id,
-                u.Username,
-                u.UserPhoto,
-                Playlists = u.Playlists.Select(p => new 
-                {
-                    p.Id,
-                    p.Title,
-                    PlaylistTracks = p.PlaylistTracks.Select(pt => new 
-                    {
-                        Track = new 
-                        {
-                            pt.Track.Id,
-                            pt.Track.DeezerTrackId,
-                            pt.Track.Title,
-                            pt.Track.Artist,
-                            pt.Track.PreviewUrl,
-                            pt.Track.CoverUrl
-                        }
-                    })
-                })
-            })
-            .FirstOrDefaultAsync(cancellationToken);
+        var userInfo = await userRepository.GetUserWithPlaylistsDtoAsync(userId);
     
         if (userInfo == null)
         {

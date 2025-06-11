@@ -2,6 +2,7 @@
 using Backend.DataBase;
 using Backend.Dto;
 using Backend.Entities;
+using Backend.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -11,23 +12,13 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/rooms")]
-public class RoomsController(AppDbContext dbContext, IHubContext<QuizHub> hubContext) : ControllerBase
+public class RoomsController(AppDbContext dbContext, IRoomRepository roomRepository) : ControllerBase
 {
     // GET: api/rooms
     [HttpGet]
     public async Task<ActionResult<IEnumerable<RoomDto>>> GetRooms()
     {
-        var rooms = await dbContext.Rooms
-            .Where(r => r.IsActive)
-            .Select(r => new RoomDto
-            {
-                Id = r.Id.ToString(),
-                Name = r.Name,
-                Genre = r.Genre,
-                PlayersCount = r.Players.Count
-            })
-            .ToListAsync();
-
+        var rooms = await roomRepository.GetActiveRoomsAsync();
         return Ok(rooms);
     }
 
@@ -61,7 +52,7 @@ public class RoomsController(AppDbContext dbContext, IHubContext<QuizHub> hubCon
             Score = 0,
         };
 
-        dbContext.Rooms.Add(room);
+        await roomRepository.AddAsync(room);
         dbContext.Players.Add(player);
         await dbContext.SaveChangesAsync();
     
