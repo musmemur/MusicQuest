@@ -62,12 +62,10 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
             UserPhoto = user.UserPhoto,
             Score = 0
         });
-    }    
+    }   
     public async Task StartGame(string roomId)
     {
-        var room = await dbContext.Rooms
-            .Include(r => r.Players)
-            .FirstOrDefaultAsync(r => r.Id == Guid.Parse(roomId));
+        var room = await roomRepository.GetRoomWithPlayersAsync(Guid.Parse(roomId));
 
         if (room == null)
         {
@@ -93,17 +91,13 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
             CurrentQuestionIndex = 0
         };
 
-        dbContext.GameSessions.Add(gameSession);
-        await dbContext.SaveChangesAsync();
+        await gameSessionRepository.AddAsync(gameSession);
         
         await Clients.Group(roomId).SendAsync("GameStarted", gameSession.Id.ToString());
     } 
-    
     private async Task SendQuestionToGroup(Guid roomId, Guid gameSessionId)
     {
-        var gameSession = await dbContext.GameSessions
-            .Include(gs => gs.Questions)
-            .FirstOrDefaultAsync(gs => gs.Id == gameSessionId);
+        var gameSession = await gameSessionRepository.GetWithQuestionsAsync(gameSessionId);
 
         if (gameSession != null && gameSession.CurrentQuestionIndex >= gameSession.Questions.Count)
         {
@@ -121,7 +115,7 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
         var currentIndex = gameSession.CurrentQuestionIndex;
         
         ++gameSession.CurrentQuestionIndex;
-        await dbContext.SaveChangesAsync();
+        await gameSessionRepository.UpdateAsync(gameSession);
         
         await Clients.Group(roomId.ToString()).SendAsync("NextQuestion", new 
         {
@@ -139,13 +133,9 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
             TotalQuestions = gameSession.QuestionsCount
         });
     }    
-    
     public async Task GetNextQuestion(string gameSessionId)
     {
-        var gameSession = await dbContext.GameSessions
-            .Include(gs => gs.Room)
-            .Include(gs => gs.Questions)
-            .FirstOrDefaultAsync(gs => gs.Id == Guid.Parse(gameSessionId));
+        var gameSession = await gameSessionRepository.GetWithRoomAndQuestionsAsync(Guid.Parse(gameSessionId));
 
         if (gameSession == null)
         {
@@ -160,9 +150,7 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
     {
         try
         {
-            var gameSession = await dbContext.GameSessions
-                .Include(gs => gs.Questions)
-                .FirstOrDefaultAsync(gs => gs.Id == Guid.Parse(gameSessionId));
+            var gameSession = await gameSessionRepository.GetWithQuestionsAsync(Guid.Parse(gameSessionId));
 
             if (gameSession == null)
             {
@@ -176,8 +164,7 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
 
             var question = gameSession.Questions[questionIndex];
 
-            var player = await dbContext.Players
-                .FirstOrDefaultAsync(p => p.UserId == Guid.Parse(userId) && p.RoomId == gameSession.RoomId);
+            var player = await playerRepository.GetPlayerInRoomAsync(Guid.Parse(userId), gameSession.RoomId);
 
             if (player == null)
             {
@@ -185,10 +172,11 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
             }
 
             var isCorrect = answerIndex == question.CorrectIndex;
-
-            if (!isCorrect) return player.Score;
-            player.Score += remainingTime;
-            await dbContext.SaveChangesAsync();
+            if (isCorrect)
+            {
+                player.Score += remainingTime;
+                await playerRepository.UpdateAsync(player);
+            }
 
             return player.Score;
         }

@@ -26,6 +26,14 @@ namespace Backend.Repositories
                 .Include(gs => gs.Questions)
                 .FirstOrDefaultAsync(gs => gs.Id == id);
         }
+        
+        public async Task<GameSession?> GetWithRoomAndQuestionsAsync(Guid id)
+        {
+            return await context.GameSessions
+                .Include(gs => gs.Room)
+                .Include(gs => gs.Questions)
+                .FirstOrDefaultAsync(gs => gs.Id == id);
+        }
 
         public async Task AddAsync(GameSession gameSession)
         {
