@@ -29,7 +29,6 @@ export const HomePage = () => {
                 setRooms(data);
             } catch (error) {
                 console.error('Ошибка загрузки комнат:', error);
-                alert('Не удалось загрузить комнаты');
             } finally {
                 setIsLoading(false);
             }
@@ -78,7 +77,6 @@ export const HomePage = () => {
 
     const handleJoinRoom = async (roomId: string) => {
         if (!connection) {
-            alert('Нет подключения к серверу');
             return;
         }
 
@@ -90,7 +88,6 @@ export const HomePage = () => {
             navigate(`/waiting-room/${roomId}`);
         } catch (err) {
             console.error("Ошибка присоединения к комнате:", err);
-            alert('Не удалось присоединиться к комнате');
         } finally {
             setJoiningRoomId(null);
         }

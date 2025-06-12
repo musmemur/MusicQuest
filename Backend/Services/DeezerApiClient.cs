@@ -10,7 +10,7 @@ public class DeezerApiClient(HttpClient httpClient)
     private const string BaseUrl = "https://api.deezer.com";
     private readonly Random _random = new();
     
-    public async Task<List<DeezerTrack>> GetTracksByGenreAsync(string genre)
+    public async Task<List<DeezerTrack>> GetTracksByGenreAsync(DeezerGenre genre)
     {
         try
         {
@@ -18,7 +18,7 @@ public class DeezerApiClient(HttpClient httpClient)
             var trackCount = random.Next(5, 16);
             
             var chartResponse = await httpClient.GetFromJsonAsync<DeezerChartResponse>(
-                $"{BaseUrl}/editorial/{GetGenreCode(genre)}/charts?limit={trackCount}");
+                $"{BaseUrl}/editorial/{(int)genre}/charts?limit={trackCount}");
 
             var tracks = chartResponse?.Tracks.Data;
         
@@ -27,8 +27,10 @@ public class DeezerApiClient(HttpClient httpClient)
                     .Where(t => !string.IsNullOrEmpty(t.Artist.Name) && !string.IsNullOrEmpty(t.Title))
                     .Take(trackCount)
                     .ToList();
+            
+            var genreName = genre.ToString().ToLower();
             var searchResponse = await httpClient.GetFromJsonAsync<DeezerSearchResponse>(
-                $"{BaseUrl}/search?q=genre:\"{Uri.EscapeDataString(genre)}\"&limit={trackCount}&order=RANKING");
+                $"{BaseUrl}/search?q=genre:\"{Uri.EscapeDataString(genreName)}\"&limit={trackCount}&order=RANKING");
             
             tracks = searchResponse?.Data;
 
@@ -44,7 +46,7 @@ public class DeezerApiClient(HttpClient httpClient)
         }
     }
 
-    public async Task<QuizQuestion> GenerateQuizQuestionAsync(string genre, string questionType)
+    public async Task<QuizQuestion> GenerateQuizQuestionAsync(DeezerGenre genre, string questionType)
     {
         var question = new QuizQuestion();
         var tracks = await GetRandomTrackListAsync(genre);
@@ -99,12 +101,12 @@ public class DeezerApiClient(HttpClient httpClient)
         return question;
     }
     
-    private async Task<List<DeezerTrack>> GetRandomTrackListAsync(string genre)
+    private async Task<List<DeezerTrack>> GetRandomTrackListAsync(DeezerGenre genre)
     {
         try
         {
             var chartResponse = await httpClient.GetFromJsonAsync<DeezerChartResponse>(
-                $"{BaseUrl}/editorial/{GetGenreCode(genre)}/charts?limit={Math.Min(4, 50)}");
+                $"{BaseUrl}/editorial/{(int)genre}/charts?limit={4}");
         
             var chartTracks = chartResponse?.Tracks.Data;
             if (chartTracks?.Count > 0)
@@ -125,20 +127,6 @@ public class DeezerApiClient(HttpClient httpClient)
             Console.WriteLine($"Error getting tracks for genre {genre}: {ex.Message}");
             return [];
         }
-    }
-
-    private static int GetGenreCode(string genreName)
-    {
-        var genreMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["pop"] = 132,
-            ["rock"] = 152,
-            ["hiphop"] = 116,
-            ["electronic"] = 106,
-            ["jazz"] = 129,
-        };
-    
-        return genreMap.GetValueOrDefault(genreName, 0);
     }
 }
 

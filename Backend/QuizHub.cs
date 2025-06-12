@@ -94,6 +94,7 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
         
         await Clients.Group(roomId).SendAsync("GameStarted", gameSession.Id.ToString());
     } 
+    
     private async Task SendQuestionToGroup(Guid roomId, Guid gameSessionId)
     {
         var gameSession = await gameSessionRepository.GetWithQuestionsAsync(gameSessionId);
@@ -219,7 +220,7 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
         await playerRepository.RemoveRangeAsync(gameSession.Room.Players);
     }
 
-    public async Task CreateWinnerPlaylist(string gameSessionId, string winnerId, string genre)
+    private async Task CreateWinnerPlaylist(string gameSessionId, string winnerId, DeezerGenre genre)
     {
         var gameSessionGuid = Guid.Parse(gameSessionId);
         var winnerIdGuid = Guid.Parse(winnerId);
@@ -328,7 +329,7 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
     // {
     //     try
     //     {
-    //         var connectionId = Context.ConnectionId;
+    //         var connection = Context;
     //         
     //         var allPlayers = await playerRepository.GetAllAsync();
     //         
@@ -341,33 +342,9 @@ public class QuizHub(DeezerApiClient deezerClient, AppDbContext dbContext,
     //             
     //             await playerRepository.RemoveAsync(player);
     //             
-    //             var playersInRoom = await playerRepository.GetPlayersByRoomAsync(player.RoomId);
+    //             await Clients.Group(roomId).SendAsync("GameDisconnected", exception?.Message);
     //             
-    //             if (!playersInRoom.Any())
-    //             {
-    //                 // Если комната пуста, удаляем её
-    //                 var room = await roomRepository.GetByIdAsync(player.RoomId);
-    //                 if (room != null)
-    //                 {
-    //                     await roomRepository.RemoveAsync(room);
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 await Clients.Group(roomId).SendAsync("PlayerLeft", userId);
-    //                 
-    //                 var room = await roomRepository.GetByIdAsync(player.RoomId);
-    //                 if (room != null && room.HostUserId == player.UserId)
-    //                 {
-    //                     var newHost = playersInRoom.First();
-    //                     room.HostUserId = newHost.UserId;
-    //                     await roomRepository.UpdateAsync(room);
-    //                     
-    //                     await Clients.Group(roomId).SendAsync("NewHostAssigned", newHost.UserId.ToString());
-    //                 }
-    //             }
-    //             
-    //             await Groups.RemoveFromGroupAsync(connectionId, roomId);
+    //             //await Groups.RemoveFromGroupAsync(connectionI, roomId);
     //         }
     //
     //         await base.OnDisconnectedAsync(exception);

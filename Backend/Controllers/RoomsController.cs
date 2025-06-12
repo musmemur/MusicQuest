@@ -29,16 +29,21 @@ public class RoomsController(IRoomRepository roomRepository, IPlayerRepository p
         {
             return Unauthorized();
         }
+        
+        if (!Enum.TryParse<DeezerGenre>(dto.Genre, true, out var genre))
+        {
+            return BadRequest("Неправильный жанр");
+        }
 
         var roomId = Guid.NewGuid();
         var room = new Room
         {
             Id = roomId,
             Name = $"Комната {roomId.ToString()}",
-            Genre = dto.Genre,
+            Genre = genre,
             HostUserId = Guid.Parse(userId),
             IsActive = true,
-            QuestionsCount = dto.QuestionCount,
+            QuestionsCount = dto.QuestionCount
         };
     
         var player = new Player

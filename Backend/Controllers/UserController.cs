@@ -1,24 +1,30 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Backend.DataBase;
 using Backend.Entities;
 using Backend.Modals;
 using Backend.Repositories;
 using Backend.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers;
 
 [ApiController]
 [Route("[controller]")]
 public class UserController(IUserRepository userRepository, JwtService jwtService, 
-    IPasswordHasher<User> passwordHasher, ImageSaver imageSaver) : ControllerBase
+    IPasswordHasher<User> passwordHasher, ImageSaver imageSaver,
+    IValidator<CreateUserRequest> createUserValidator) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserRequest request, CancellationToken ct)
     {
+        var validationResult = await createUserValidator.ValidateAsync(request, ct);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
+        }
+        
         if (await userRepository.UsernameExistsAsync(request.Username))
         {
             return BadRequest("Пользователь с таким логином уже существует");

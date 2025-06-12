@@ -14,10 +14,7 @@ const GENRES = [
     { id: 113, name: 'Dance' },
     { id: 144, name: 'Jazz' },
     { id: 129, name: 'Metal' },
-    { id: 165, name: 'R&B' },
     { id: 153, name: 'Electronic' },
-    { id: 169, name: 'Classical' },
-    { id: 98, name: 'Reggae' },
 ];
 
 const QUESTION_COUNTS = [3, 4, 5];

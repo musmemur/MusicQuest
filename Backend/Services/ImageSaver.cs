@@ -3,6 +3,7 @@ using Minio;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Backend.Configurations.Options;
 using Microsoft.Extensions.Options;
 
 namespace Backend.Services;

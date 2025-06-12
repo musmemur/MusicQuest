@@ -4,7 +4,7 @@ public class Room
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = "Новая комната";
-    public string Genre { get; set; }
+    public DeezerGenre Genre { get; set; }
     public bool IsActive { get; set; } = true; 
     
     public int QuestionsCount { get; set; }

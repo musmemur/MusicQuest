@@ -1,0 +1,37 @@
+@media (max-width: 900px) {
+    .landing-topic {
+        font-size: 3rem;
+    }
+
+    .landing-main {
+        height: calc(100vh - 11rem);
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .landing-topic {
+        font-size: 2rem;
+    }
+
+    .landing-main {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .landing-main {
+        margin: 0;
+    }
+}
+
+@media (max-width: 400px) {
+    .landing-topic svg {
+        display: none;
+    }
+
+    .landing-topic {
+        justify-content: center;
+        width: 100%;
+    }
+}

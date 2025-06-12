@@ -47,6 +47,10 @@ public class AppDbContext(IConfiguration configuration) : DbContext
             .WithMany() 
             .HasForeignKey(r => r.HostUserId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<Room>()
+            .Property(r => r.Genre)
+            .HasConversion<int>();
 
         modelBuilder.Entity<Player>()
             .HasOne(p => p.Room)

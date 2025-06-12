@@ -20,7 +20,7 @@ namespace Backend.Repositories
                 {
                     Id = r.Id.ToString(),
                     Name = r.Name,
-                    Genre = r.Genre,
+                    Genre = r.Genre.ToDisplayString(),
                     PlayersCount = r.Players.Count
                 })
                 .ToListAsync();

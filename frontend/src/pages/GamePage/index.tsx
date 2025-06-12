@@ -144,15 +144,9 @@ export const GamePage = () => {
     useEffect(() => {
         if (!connection) return;
 
-        connection.on("PlayerLeft", (userId: string) => {
-            console.log(`Player ${userId} left the game`);
-        });
-
-        connection.on("NewHostAssigned", async (newHostId: string) => {
-            console.log(`New host assigned: ${newHostId}`);
-            const fetchedUser = await fetchAuthUserData();
-            const loggedUser: User = fetchedUser as User;
-            setIsHost(loggedUser.userId === newHostId);
+        connection.on("GameDisconnected", (error: string) => {
+            console.log(`Disconnection: ${error}.`);
+            navigate("/home");
         });
 
         connection.on("ConnectionLost", () => {

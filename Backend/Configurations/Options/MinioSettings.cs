@@ -1,4 +1,4 @@
-﻿namespace Backend;
+﻿namespace Backend.Configurations.Options;
 
 public class MinioSettings
 {

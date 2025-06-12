@@ -2,6 +2,7 @@ import {Link} from "react-router";
 import {Header} from "../../widgets/Header";
 import {Logo} from "../../shared/assets/svg/Logo.tsx";
 import './index.css';
+import './adaptive.css';
 
 export const LandingPage = () => {
     return(
