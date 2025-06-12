@@ -2,6 +2,7 @@
 using Backend.Dto;
 using Backend.Entities;
 using Backend.Repositories;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,8 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/rooms")]
-public class RoomsController(IRoomRepository roomRepository, IPlayerRepository playerRepository) : ControllerBase
+public class RoomsController(IRoomRepository roomRepository, 
+    IPlayerRepository playerRepository, IValidator<CreateRoomDto> createRoomValidator) : ControllerBase
 {
     // GET: api/rooms
     [HttpGet]
@@ -24,16 +26,20 @@ public class RoomsController(IRoomRepository roomRepository, IPlayerRepository p
     [Authorize]
     public async Task<ActionResult<RoomDto>> CreateRoom([FromBody] CreateRoomDto dto)
     {
+        var validationResult = await createRoomValidator.ValidateAsync(dto);
+        
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
+        }
+        
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
             return Unauthorized();
         }
         
-        if (!Enum.TryParse<DeezerGenre>(dto.Genre, true, out var genre))
-        {
-            return BadRequest("Неправильный жанр");
-        }
+        Enum.TryParse<DeezerGenre>(dto.Genre, true, out var genre);
 
         var roomId = Guid.NewGuid();
         var room = new Room
