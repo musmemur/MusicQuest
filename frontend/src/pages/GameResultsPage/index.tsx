@@ -7,21 +7,7 @@ import { Header } from "../../widgets/Header";
 import './index.css';
 import photoPlaceholder from '../../shared/assets/photo-placeholder.png';
 import {Link} from "react-router";
-
-export type PlayerScoreDto = {
-    username: string;
-    userPhoto?: string;
-    score: number;
-};
-
-export type GameResultsDto = {
-    gameId: string;
-    roomId: string;
-    genre: string;
-    winnerId: string;
-    winnerName: string;
-    scores: Record<string, PlayerScoreDto>;
-};
+import type {GameResultsDto} from "../../entities/GameResultsDto.ts";
 
 export const GameResultsPage = () => {
     const { gameId } = useParams();

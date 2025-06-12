@@ -6,12 +6,7 @@ import type {User} from "../../entities/User.ts";
 import {fetchAuthUserData} from "../../processes/fetchAuthUserData.ts";
 import {useSignalR} from "../../app/signalRContext.tsx";
 import photoPlaceholder from '../../shared/assets/photo-placeholder.png'
-
-interface Player {
-    userId: string;
-    username: string;
-    userPhoto?: string;
-}
+import type {Player} from "../../entities/Player.ts";
 
 export const WaitingRoomPage = () => {
     const connection = useSignalR();

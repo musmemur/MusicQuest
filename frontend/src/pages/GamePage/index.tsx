@@ -5,32 +5,22 @@ import {useEffect, useRef, useState} from "react";
 import { useNavigate } from "react-router";
 import {fetchAuthUserData} from "../../processes/fetchAuthUserData.ts";
 import type {User} from "../../entities/User.ts";
+import type {QuizQuestion} from "../../entities/QuizQuestion.ts";
 
-export type QuizQuestion = {
-    id: string;
-    questionText: string;
-    questionType: "artist" | "track";
-    correctAnswer: string;
-    correctIndex: number;
-    options: string[];
-    previewUrl?: string;
-    coverUrl?: string;
-    trackTitle: string;
-    artist: string;
-};
+const questionTimer = 5;
 
 export const GamePage = () => {
     const { gameId } = useParams();
     const connection = useSignalR();
     const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(null);
     const [score, setScore] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(5);
+    const [timeLeft, setTimeLeft] = useState(questionTimer);
     const [totalQuestions, setTotalQuestions] = useState(0);
     const [questionIndex, setQuestionIndex] = useState(0);
     const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
     const navigate = useNavigate();
-    const questionTimerRef = useRef(5);
-    const countdownTimerRef = useRef(5);
+    const questionTimerRef = useRef(questionTimer);
+    const countdownTimerRef = useRef(questionTimer);
     const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
     const [isHost, setIsHost] = useState(false);
     const [isHostChecked, setIsHostChecked] = useState(false);
@@ -78,7 +68,7 @@ export const GamePage = () => {
                 if (isHost) {
                     connection.invoke("GetNextQuestion", gameId);
                 }
-            }, 5000);
+            }, questionTimer * 1000);
         };
 
         connection.on("NextQuestion", (question: QuizQuestion & {
@@ -86,7 +76,7 @@ export const GamePage = () => {
             totalQuestions: number
         }) => {
             setCurrentQuestion(question);
-            setTimeLeft(5);
+            setTimeLeft(questionTimer);
             setQuestionIndex(question.questionIndex + 1);
             setTotalQuestions(question.totalQuestions);
             setIsAnswerSubmitted(false);
@@ -121,7 +111,7 @@ export const GamePage = () => {
         }
 
         if (currentQuestion) {
-            setTimeLeft(5);
+            setTimeLeft(questionTimer);
 
             countdownTimerRef.current = setInterval(() => {
                 setTimeLeft(prev => {
@@ -131,7 +121,7 @@ export const GamePage = () => {
                     }
                     return prev - 1;
                 });
-            }, 500);
+            }, questionTimer * 100);
         }
 
         return () => {

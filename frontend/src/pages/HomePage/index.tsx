@@ -6,13 +6,8 @@ import {AvailableRoom} from "../../widgets/AvailableRoom";
 import {fetchAuthUserData} from "../../processes/fetchAuthUserData.ts";
 import type {User} from "../../entities/User.ts";
 import {useSignalR} from "../../app/signalRContext.tsx";
-
-export interface Room {
-    id: string;
-    name: string;
-    genre: string;
-    playersCount: number;
-}
+import {getActiveRooms} from "../../processes/getActiveRooms.ts";
+import type {Room} from "../../entities/Room.ts";
 
 export const HomePage = () => {
     const connection = useSignalR();
@@ -24,9 +19,8 @@ export const HomePage = () => {
     useEffect(() => {
         const fetchRooms = async () => {
             try {
-                const response = await fetch('http://localhost:19288/api/rooms');
-                const data = await response.json();
-                setRooms(data);
+                const activeRooms = await getActiveRooms();
+                setRooms(activeRooms);
             } catch (error) {
                 console.error('Ошибка загрузки комнат:', error);
             } finally {

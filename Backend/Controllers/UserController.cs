@@ -12,21 +12,30 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class UserController(IUserRepository userRepository, JwtService jwtService, 
-    IPasswordHasher<User> passwordHasher, ImageSaver imageSaver,
-    IValidator<CreateUserRequest> createUserValidator) : ControllerBase
+public class UserController(
+    IUserRepository userRepository, 
+    JwtService jwtService, 
+    IPasswordHasher<User> passwordHasher, 
+    ImageSaver imageSaver,
+    IValidator<CreateUserRequest> createUserValidator, 
+    ILogger<UserService> logger) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserRequest request, CancellationToken ct)
     {
+        logger.LogInformation("Начало регистрации пользователя {Username}", request.Username);
+        
         var validationResult = await createUserValidator.ValidateAsync(request, ct);
         if (!validationResult.IsValid)
         {
+            logger.LogWarning("Ошибка валидации при регистрации: {Errors}", 
+                string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
             return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
         }
         
         if (await userRepository.UsernameExistsAsync(request.Username))
         {
+            logger.LogWarning("Попытка регистрации существующего пользователя: {Username}", request.Username);
             return BadRequest("Пользователь с таким логином уже существует");
         }
 
@@ -34,31 +43,38 @@ public class UserController(IUserRepository userRepository, JwtService jwtServic
         {
             try
             {
+                logger.LogDebug("Обработка фото пользователя");
                 var base64Data = request.UserPhoto.Data.Split(',')[1];
                 var mimeType = request.UserPhoto.Data.Split(';')[0].Split(':')[1];
 
                 var imageBytes = Convert.FromBase64String(base64Data);
-
+                logger.LogDebug("Сохранение фото в S3");
                 var photoPath = await imageSaver.SaveImageToS3(imageBytes, mimeType, "soundquestphotos");
                 request.UserPhoto.FileName = photoPath;
                 request.UserPhoto.Data = null;
             }
             catch (FormatException ex)
             {
+                logger.LogError(ex, "Ошибка обработки base64 изображения");
                 return BadRequest($"Некорректные base64 данные. Ошибка: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Ошибка при сохранении изображения");
+                return StatusCode(500, "Ошибка при сохранении фото");
             }
         }
         
         var hashedPassword = passwordHasher.HashPassword(null, request.Password);
+        logger.LogDebug("Пароль хеширован");
         
-        var user = new User(
-            request.Username, 
-            hashedPassword, 
-            request.UserPhoto?.FileName);
-
+        var user = new User(request.Username, hashedPassword, request.UserPhoto?.FileName);
         await userRepository.AddAsync(user);
+        logger.LogInformation("Пользователь {Username} успешно зарегистрирован с ID {UserId}", 
+            user.Username, user.Id);
 
         var token = await jwtService.GenerateJwtTokenAsync(user.Id, ct);
+        logger.LogDebug("JWT токен сгенерирован для пользователя {UserId}", user.Id);
     
         return Ok(new AuthResult(token, user.Id, user.Username, user.UserPhoto));
     }
@@ -66,10 +82,13 @@ public class UserController(IUserRepository userRepository, JwtService jwtServic
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
+        logger.LogInformation("Попытка входа пользователя {Username}", request.Username);
+        
         var userInfo = await userRepository.GetByUsernameAsync(request.Username);
         
         if (userInfo == null)
         {
+            logger.LogWarning("Попытка входа несуществующего пользователя {Username}", request.Username);
             return Unauthorized("Пользователя с таким логином не существует");
         }
         
@@ -81,11 +100,16 @@ public class UserController(IUserRepository userRepository, JwtService jwtServic
 
         if (verificationResult == PasswordVerificationResult.Failed)
         {
+            logger.LogWarning("Неверный пароль для пользователя {Username}", request.Username);
             return Unauthorized("Неверный пароль");
         }
 
+        logger.LogDebug("Пароль верифицирован для пользователя {Username}", request.Username);
         var token = await jwtService.GenerateJwtTokenAsync(userInfo.Id, ct);
-        return Ok( new AuthResult(token, userInfo.Id, userInfo.Username, userInfo.UserPhoto));
+        logger.LogInformation("Успешный вход пользователя {Username} с ID {UserId}", 
+            userInfo.Username, userInfo.Id);
+            
+        return Ok(new AuthResult(token, userInfo.Id, userInfo.Username, userInfo.UserPhoto));
     }
 
     [HttpGet("me")]
@@ -95,16 +119,24 @@ public class UserController(IUserRepository userRepository, JwtService jwtServic
                      ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (userId == null)
+        {
+            logger.LogWarning("Попытка доступа к /me без авторизации");
             return Unauthorized(new { message = "Пользователь не авторизован" });
+        }
 
         var guid = Guid.Parse(userId);
+        logger.LogDebug("Запрос информации о пользователе {UserId}", guid);
 
         var user = await userRepository.GetByIdAsync(guid);
 
         if (user == null)
+        {
+            logger.LogWarning("Пользователь {UserId} не найден в базе", guid);
             return Unauthorized(new { message = "Пользователь не найден" });
+        }
 
         var token = await jwtService.GenerateJwtTokenAsync(user.Id, ct);
+        logger.LogDebug("Обновление токена для пользователя {UserId}", user.Id);
 
         return Ok(new AuthResult(token, user.Id, user.Username, user.UserPhoto));
     }
@@ -114,12 +146,18 @@ public class UserController(IUserRepository userRepository, JwtService jwtServic
         Guid userId, 
         CancellationToken cancellationToken = default)
     {
+        logger.LogInformation("Запрос информации о пользователе с плейлистами {UserId}", userId);
+        
         var userInfo = await userRepository.GetUserWithPlaylistsDtoAsync(userId);
     
         if (userInfo == null)
         {
+            logger.LogWarning("Пользователь с плейлистами {UserId} не найден", userId);
             return NotFound();
         }
+        
+        logger.LogDebug("Найдено {Count} плейлистов для пользователя {UserId}", 
+            userInfo.Playlists?.Count ?? 0, userId);
     
         return Ok(userInfo);
     }

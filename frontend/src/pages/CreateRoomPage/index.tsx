@@ -5,17 +5,9 @@ import {useNavigate} from "react-router";
 import {fetchAuthUserData} from "../../processes/fetchAuthUserData.ts";
 import type {User} from "../../entities/User.ts";
 import {useSignalR} from "../../app/signalRContext.tsx";
-
-const GENRES = [
-    { id: 152, name: 'Pop' },
-    { id: 85, name: 'Alternative' },
-    { id: 132, name: 'Rock' },
-    { id: 116, name: 'Rap/Hip-Hop' },
-    { id: 113, name: 'Dance' },
-    { id: 144, name: 'Jazz' },
-    { id: 129, name: 'Metal' },
-    { id: 153, name: 'Electronic' },
-];
+import {DeezerGenres} from "../../entities/DeezerGenres.ts";
+import type {CreateRoomDto} from "../../entities/CreateRoomDto.ts";
+import {createRoom} from "../../processes/createRoom.ts";
 
 const QUESTION_COUNTS = [3, 4, 5];
 
@@ -42,38 +34,27 @@ export const CreateRoomPage = () => {
 
     const handleCreateRoom = async () => {
         if (!selectedGenre) {
-            alert('Выберите жанр!');
+            console.warn('Выберите жанр!');
             return;
         }
 
         setIsCreating(true);
 
         try {
-            const genreName = GENRES.find(g => g.id === selectedGenre)?.name || '';
-            const token = localStorage.getItem('token');
+            const genreName = DeezerGenres.find(g => g.id === selectedGenre)?.name || '';
             if (user) {
-                const response = await fetch('http://localhost:19288/api/rooms', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        "Authorization": `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        genre: genreName,
-                        questionCount,
-                        userHostId: user.userId
-                    })
-                });
-
-                const data = await response.json();
-
+                const createRoomDto: CreateRoomDto = {
+                    genre: genreName,
+                    questionCount,
+                    userHostId: user.userId
+                }
+                const createdRoom = await createRoom(createRoomDto);
                 if (connection) {
-                    navigate(`/waiting-room/${data.roomId}`);
+                    navigate(`/waiting-room/${createdRoom}`);
                 }
             }
         } catch (error) {
             console.error('Ошибка создания комнаты:', error);
-            alert('Не удалось создать комнату');
         } finally {
             setIsCreating(false);
         }
@@ -94,7 +75,7 @@ export const CreateRoomPage = () => {
                         className="form-control"
                     >
                         <option value="" disabled>-- Выберите жанр --</option>
-                        {GENRES.map(genre => (
+                        {DeezerGenres.map(genre => (
                             <option key={genre.id} value={genre.id}>
                                 {genre.name}
                             </option>

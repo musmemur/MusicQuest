@@ -10,15 +10,29 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/rooms")]
-public class RoomsController(IRoomRepository roomRepository, 
-    IPlayerRepository playerRepository, IValidator<CreateRoomDto> createRoomValidator) : ControllerBase
+public class RoomsController(
+    IRoomRepository roomRepository, 
+    IPlayerRepository playerRepository, 
+    IValidator<CreateRoomDto> createRoomValidator,
+    ILogger<RoomsController> logger) : ControllerBase
 {
     // GET: api/rooms
     [HttpGet]
     public async Task<ActionResult<IEnumerable<RoomDto>>> GetRooms()
     {
-        var rooms = await roomRepository.GetActiveRoomsAsync();
-        return Ok(rooms);
+        logger.LogInformation("Запрос списка активных комнат");
+        
+        try
+        {
+            var rooms = await roomRepository.GetActiveRoomsAsync();
+            logger.LogDebug("Найдено {RoomCount} активных комнат", rooms.Count());
+            return Ok(rooms);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Ошибка при получении списка комнат");
+            return StatusCode(500, "Произошла ошибка при получении комнат");
+        }
     }
 
     // POST: api/rooms
@@ -26,26 +40,38 @@ public class RoomsController(IRoomRepository roomRepository,
     [Authorize]
     public async Task<ActionResult<RoomDto>> CreateRoom([FromBody] CreateRoomDto dto)
     {
+        logger.LogInformation("Начало создания комнаты. Жанр: {Genre}, Вопросов: {QuestionCount}", 
+            dto.Genre, dto.QuestionCount);
+        
         var validationResult = await createRoomValidator.ValidateAsync(dto);
         
         if (!validationResult.IsValid)
         {
+            logger.LogWarning("Ошибка валидации при создании комнаты: {Errors}", 
+                string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
             return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
         }
         
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
+            logger.LogWarning("Попытка создания комнаты без авторизации");
             return Unauthorized();
         }
         
-        Enum.TryParse<DeezerGenre>(dto.Genre, true, out var genre);
+        if (!Enum.TryParse<DeezerGenre>(dto.Genre, true, out var genre))
+        {
+            logger.LogWarning("Указан недопустимый жанр: {Genre}", dto.Genre);
+            return BadRequest("Неправильный жанр");
+        }
 
         var roomId = Guid.NewGuid();
+        logger.LogDebug("Создание комнаты с ID: {RoomId}", roomId);
+        
         var room = new Room
         {
             Id = roomId,
-            Name = $"Комната {roomId.ToString()}",
+            Name = $"Комната {roomId}",
             Genre = genre,
             HostUserId = Guid.Parse(userId),
             IsActive = true,
@@ -60,9 +86,20 @@ public class RoomsController(IRoomRepository roomRepository,
             Score = 0,
         };
 
-        await roomRepository.AddAsync(room);
-        await playerRepository.AddAsync(player);
-    
-        return Ok(new { roomId = room.Id.ToString() });
+        try
+        {
+            await roomRepository.AddAsync(room);
+            await playerRepository.AddAsync(player);
+            
+            logger.LogInformation("Комната успешно создана. ID: {RoomId}, Хост: {UserId}", 
+                roomId, userId);
+            
+            return Ok(new { roomId = room.Id.ToString() });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Ошибка при создании комнаты");
+            return StatusCode(500, "Произошла ошибка при создании комнаты");
+        }
     }
 }
