@@ -7,7 +7,7 @@ import {fetchAuthUserData} from "../../processes/fetchAuthUserData.ts";
 import type {User} from "../../entities/User.ts";
 import type {QuizQuestion} from "../../entities/QuizQuestion.ts";
 
-const questionTimer = 5;
+const questionTimer = 10;
 
 export const GamePage = () => {
     const { gameId } = useParams();

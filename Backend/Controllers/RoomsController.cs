@@ -1,7 +1,10 @@
 ﻿using System.Security.Claims;
-using Backend.Dto;
-using Backend.Entities;
-using Backend.Repositories;
+using Backend.Api.Hubs;
+using Backend.Domain.Abstractions;
+using Backend.Domain.Entities;
+using Backend.Domain.Enums;
+using Backend.Domain.Models;
+using Backend.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +17,7 @@ namespace Backend.Controllers;
 public class RoomsController(
     IRoomRepository roomRepository, 
     IPlayerRepository playerRepository, 
-    IValidator<CreateRoomDto> createRoomValidator,
+    IValidator<CreateRoomRequest> createRoomValidator,
     ILogger<RoomsController> logger,
     IHubContext<QuizHub> hubContext) : ControllerBase
 {
@@ -40,12 +43,12 @@ public class RoomsController(
     // POST: api/rooms
     [HttpPost]
     [Authorize]
-    public async Task<ActionResult<RoomDto>> CreateRoom([FromBody] CreateRoomDto dto)
+    public async Task<ActionResult<RoomDto>> CreateRoom([FromBody] CreateRoomRequest request)
     {
         logger.LogInformation("Начало создания комнаты. Жанр: {Genre}, Вопросов: {QuestionCount}", 
-            dto.Genre, dto.QuestionCount);
+            request.Genre, request.QuestionCount);
         
-        var validationResult = await createRoomValidator.ValidateAsync(dto);
+        var validationResult = await createRoomValidator.ValidateAsync(request);
         
         if (!validationResult.IsValid)
         {
@@ -61,9 +64,9 @@ public class RoomsController(
             return Unauthorized();
         }
         
-        if (!Enum.TryParse<DeezerGenre>(dto.Genre, true, out var genre))
+        if (!Enum.TryParse<DeezerGenre>(request.Genre, true, out var genre))
         {
-            logger.LogWarning("Указан недопустимый жанр: {Genre}", dto.Genre);
+            logger.LogWarning("Указан недопустимый жанр: {Genre}", request.Genre);
             return BadRequest("Неправильный жанр");
         }
 
@@ -77,7 +80,7 @@ public class RoomsController(
             Genre = genre,
             HostUserId = Guid.Parse(userId),
             IsActive = true,
-            QuestionsCount = dto.QuestionCount
+            QuestionsCount = request.QuestionCount
         };
     
         var player = new Player

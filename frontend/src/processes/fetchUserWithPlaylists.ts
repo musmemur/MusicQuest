@@ -17,13 +17,13 @@ export async function fetchUserWithPlaylists(userId: string): Promise<UserWithPl
             playlists: response.data.playlists?.map((playlist: any) => ({
                 id: playlist.id,
                 title: playlist.title,
-                tracks: playlist.playlistTracks?.map((pt: any) => ({
-                    id: pt.track.id,
-                    deezerTrackId: pt.track.deezerTrackId,
-                    title: pt.track.title,
-                    artist: pt.track.artist,
-                    previewUrl: pt.track.previewUrl,
-                    coverUrl: pt.track.coverUrl,
+                tracks: playlist.tracks?.map((track: any) => ({
+                    id: track.id,
+                    deezerTrackId: track.deezerTrackId,
+                    title: track.title,
+                    artist: track.artist,
+                    previewUrl: track.previewUrl,
+                    coverUrl: track.coverUrl,
                 })) || []
             })) || []
         };

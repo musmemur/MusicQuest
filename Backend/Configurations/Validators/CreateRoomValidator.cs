@@ -1,8 +1,9 @@
-﻿using Backend.Dto;
+﻿using Backend.Domain.Enums;
+using Backend.Models;
 using FluentValidation;
 namespace Backend.Configurations.Validators;
 
-public class CreateRoomValidator : AbstractValidator<CreateRoomDto>
+public class CreateRoomValidator : AbstractValidator<CreateRoomRequest>
 {
     public CreateRoomValidator()
     {

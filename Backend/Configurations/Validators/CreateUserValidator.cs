@@ -1,4 +1,4 @@
-﻿using Backend.Modals;
+﻿using Backend.Models;
 
 namespace Backend.Configurations.Validators;
 using FluentValidation;

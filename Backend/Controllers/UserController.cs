@@ -1,9 +1,10 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Backend.Entities;
-using Backend.Modals;
-using Backend.Repositories;
-using Backend.Services;
+using Backend.Domain.Abstractions;
+using Backend.Domain.Entities;
+using Backend.Domain.Services;
+using Backend.Infrastructure.Services;
+using Backend.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
