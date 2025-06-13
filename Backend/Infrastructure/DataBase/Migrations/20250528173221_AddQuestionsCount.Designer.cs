@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Backend.DataBase;
+using Backend.Infrastructure.DataBase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;

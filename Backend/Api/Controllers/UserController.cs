@@ -9,7 +9,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Backend.Controllers;
+namespace Backend.Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]

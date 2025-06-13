@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Backend.Controllers;
+namespace Backend.Api.Controllers;
 
 [ApiController]
 [Route("api/rooms")]

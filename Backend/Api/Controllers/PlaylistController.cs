@@ -1,9 +1,10 @@
 ﻿using Backend.DataBase;
+using Backend.Infrastructure.DataBase;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend.Controllers;
+namespace Backend.Api.Controllers;
 
 [ApiController]
 [Route("api/playlists")]
