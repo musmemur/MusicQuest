@@ -28,45 +28,29 @@ export const HomePage = () => {
             }
         };
 
-        const setupSignalREvents = () => {
-            if (!connection) return;
+        (async () => {
+            await fetchRooms();
+        })();
 
-            const handlers = {
-                RoomUpdated: (updatedRoom: Room) => {
-                    setRooms(prev => prev.map(room =>
-                        room.id === updatedRoom.id ? updatedRoom : room
-                    ));
-                },
-                PlayerCountChanged: (roomId: string, newCount: number) => {
-                    setRooms(prev => prev.map(room =>
-                        room.id === roomId ? {...room, playersCount: newCount} : room
-                    ));
-                },
-                RoomCreated: (newRoom: Room) => {
-                    setRooms(prev => [...prev, newRoom]);
-                },
-                RoomClosed: (roomId: string) => {
-                    setRooms(prev => prev.filter(room => room.id !== roomId));
-                }
-            };
-
-            Object.entries(handlers).forEach(([event, handler]) => {
-                connection.on(event, handler);
+        // Подписываемся на событие создания новой комнаты
+        if (connection) {
+            connection.on("RoomCreated", (newRoom: Room) => {
+                setRooms(prevRooms => [...prevRooms, newRoom]);
             });
 
-            return () => {
-                Object.entries(handlers).forEach(([event, handler]) => {
-                    connection.off(event, handler);
-                });
-            };
-        };
-
-        fetchRooms();
-        const cleanup = setupSignalREvents();
+            connection.on("RoomClosed", (roomId: string) => {
+                setRooms(prevRooms => prevRooms.filter(room => room.id !== roomId));
+            });
+        }
 
         return () => {
-            cleanup?.();
+            // Отписываемся от событий при размонтировании компонента
+            if (connection) {
+                connection.off("RoomCreated");
+                connection.off("RoomClosed");
+            }
         };
+
     }, [connection]);
 
     const handleJoinRoom = async (roomId: string) => {

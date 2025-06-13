@@ -415,6 +415,16 @@ public class QuizHub(
             userId, isHost ? "является" : "не является", gameSessionId);
         await Clients.Caller.SendAsync("ReceiveHostStatus", isHost);
     }
+    
+    public override async Task OnConnectedAsync()
+    {
+        await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        await base.OnDisconnectedAsync(exception);
+    }
 
     // public override async Task OnDisconnectedAsync(Exception? exception)
     // {

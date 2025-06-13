@@ -47,18 +47,17 @@ export const GameResultsPage = () => {
                                 setLoading(false);
                             });
                     } else {
-                        // Non-host players wait for the host to send results
                         const timeout = setTimeout(() => {
                             if (!results) {
                                 setLoading(false);
                             }
-                        }, 15000); // 15 seconds timeout
+                        }, 15000);
 
                         return () => clearTimeout(timeout);
                     }
                 });
 
-                connection.invoke("IsUserHost", gameId, loggedUser.userId);
+                await connection.invoke("IsUserHost", gameId, loggedUser.userId);
 
             } catch (error) {
                 console.error("Error initializing game:", error);
@@ -66,14 +65,16 @@ export const GameResultsPage = () => {
             }
         };
 
-        initializeGame();
+        (async () => {
+            await initializeGame();
+        })();
 
         return () => {
             connection.off("ReceiveHostStatus");
             connection.off("ReceiveGameResults");
             connection.off("Error");
         };
-    }, [connection, gameId]);
+    }, [connection, gameId, results]);
 
     const handleBackToHome = () => {
         navigate(`/home`);

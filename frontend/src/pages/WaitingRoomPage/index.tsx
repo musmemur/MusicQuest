@@ -50,7 +50,6 @@ export const WaitingRoomPage = () => {
                     setError(errorMessage);
                 });
 
-                // Присоединяемся к комнате
                 await connection.invoke("JoinRoom", roomId, loggedUser.userId);
 
             } catch (err) {
@@ -59,7 +58,9 @@ export const WaitingRoomPage = () => {
             }
         };
 
-        setupSignalREvents();
+        (async () => {
+            await setupSignalREvents();
+        })();
 
         return () => {
             if (!connection) return;

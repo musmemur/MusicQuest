@@ -5,6 +5,7 @@ using Backend.Repositories;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Backend.Controllers;
 
@@ -14,7 +15,8 @@ public class RoomsController(
     IRoomRepository roomRepository, 
     IPlayerRepository playerRepository, 
     IValidator<CreateRoomDto> createRoomValidator,
-    ILogger<RoomsController> logger) : ControllerBase
+    ILogger<RoomsController> logger,
+    IHubContext<QuizHub> hubContext) : ControllerBase
 {
     // GET: api/rooms
     [HttpGet]
@@ -93,6 +95,15 @@ public class RoomsController(
             
             logger.LogInformation("Комната успешно создана. ID: {RoomId}, Хост: {UserId}", 
                 roomId, userId);
+            
+            // Отправляем уведомление о новой комнате всем клиентам
+            await hubContext.Clients.All.SendAsync("RoomCreated", new RoomDto
+            {
+                Id = room.Id.ToString(),
+                Name = room.Name,
+                Genre = room.Genre.ToString(),
+                PlayersCount = room.Players.Count
+            });
             
             return Ok(new { roomId = room.Id.ToString() });
         }

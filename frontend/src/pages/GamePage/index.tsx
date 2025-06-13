@@ -42,14 +42,16 @@ export const GamePage = () => {
                     }
                 });
 
-                connection.invoke("IsUserHost", gameId, loggedUser.userId);
+                await connection.invoke("IsUserHost", gameId, loggedUser.userId);
 
             } catch (error) {
                 console.error("Error initializing game:", error);
             }
         };
 
-        initializeGame();
+        (async () => {
+            await initializeGame();
+        })();
 
         return () => {
             connection.off("ReceiveHostStatus");

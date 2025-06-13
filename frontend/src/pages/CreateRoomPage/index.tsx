@@ -29,7 +29,10 @@ export const CreateRoomPage = () => {
                 setUser(null);
             }
         };
-        loadUser();
+
+        (async () => {
+            await loadUser();
+        })();
     }, []);
 
     const handleCreateRoom = async () => {
