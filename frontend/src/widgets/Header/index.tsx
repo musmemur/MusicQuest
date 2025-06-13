@@ -1,4 +1,5 @@
 import "./index.css";
+import './adaptive.css';
 import {Link} from "react-router";
 import {useEffect, useState} from 'react';
 import {fetchAuthUserData} from "../../processes/fetchAuthUserData.ts";

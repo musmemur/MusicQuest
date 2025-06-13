@@ -1,0 +1,5 @@
+@media (max-width: 600px) {
+    .auth-user-container span {
+        display: none;
+    }
+}
