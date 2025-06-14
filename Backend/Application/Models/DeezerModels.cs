@@ -1,4 +1,4 @@
-﻿namespace Backend.ApiModals;
+﻿namespace Backend.Application.Models;
 
 public class DeezerChartResponse
 {

@@ -1,14 +1,13 @@
-﻿using Backend.DataBase;
+﻿using Backend.Application.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
-using Backend.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Infrastructure.DataBase.Users
 {
     public class UserRepository(AppDbContext context) : IUserRepository
     {
-        public async Task<User?> GetByIdAsync(Guid id)
+        public async Task<User?> GetByIdAsync(Guid? id)
         {
             return await context.Users.FindAsync(id);
         }
@@ -37,11 +36,11 @@ namespace Backend.Infrastructure.DataBase.Users
             await context.SaveChangesAsync();
         }
 
-        public async Task<UserPlaylistsDto?> GetUserWithPlaylistsDtoAsync(Guid userId)
+        public async Task<UserWithPlaylistsDto?> GetUserWithPlaylistsDtoAsync(Guid userId)
         {
             return await context.Users
                 .Where(u => u.Id == userId)
-                .Select(u => new UserPlaylistsDto
+                .Select(u => new UserWithPlaylistsDto
                 {
                     Id = u.Id,
                     Username = u.Username,
@@ -61,7 +60,6 @@ namespace Backend.Infrastructure.DataBase.Users
                         }).ToList()
                     }).ToList()
                 })
-                .AsNoTracking()
                 .FirstOrDefaultAsync();
         }
     }

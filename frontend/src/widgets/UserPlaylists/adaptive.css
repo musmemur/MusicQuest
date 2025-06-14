@@ -1,0 +1,12 @@
+@media (max-width: 600px) {
+    .toggle-tracks-btn h3 {
+        margin: 0;
+        text-align: start;
+    }
+}
+
+@media (max-width: 400px) {
+    .toggle-tracks-btn h3 {
+        font-size: 1.5rem;
+    }
+}

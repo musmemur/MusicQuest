@@ -1,4 +1,5 @@
 import './index.css';
+import './adaptive.css';
 import {UserTrack} from "../UserTrack";
 import type {Track} from "../../entities/Track.ts";
 

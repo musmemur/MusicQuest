@@ -1,7 +1,6 @@
-﻿using Backend.DataBase;
+﻿using Backend.Application.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
-using Backend.Domain.Models;
 using Backend.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 

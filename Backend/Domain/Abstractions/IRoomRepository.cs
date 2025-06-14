@@ -1,17 +1,16 @@
-﻿using Backend.Domain.Entities;
-using Backend.Domain.Models;
+﻿using Backend.Application.Models;
+using Backend.Domain.Entities;
 
-namespace Backend.Domain.Abstractions
+namespace Backend.Domain.Abstractions;
+
+public interface IRoomRepository
 {
-    public interface IRoomRepository
-    {
-        Task<Room?> GetByIdAsync(Guid id);
-        Task<IEnumerable<RoomDto>> GetActiveRoomsAsync();
-        Task AddAsync(Room room);
-        Task UpdateAsync(Room room);
-        Task RemoveAsync(Room room);
+    Task<Room?> GetByIdAsync(Guid id);
+    Task<IEnumerable<RoomDto>> GetActiveRoomsAsync();
+    Task AddAsync(Room room);
+    Task UpdateAsync(Room room);
+    Task RemoveAsync(Room room);
 
-        Task<Room?> GetRoomWithPlayersAsync(Guid roomId);
-        Task<bool> IsUserInRoomAsync(Guid roomId, Guid userId);
-    }
+    Task<Room?> GetRoomWithPlayersAsync(Guid roomId);
+    Task<bool> IsUserInRoomAsync(Guid roomId, Guid userId);
 }

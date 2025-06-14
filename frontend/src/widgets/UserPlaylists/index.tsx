@@ -1,4 +1,5 @@
 import './index.css';
+import './adaptive.css';
 import {UserTracks} from "../UserTracks";
 import type {Playlist} from "../../entities/Playlist.ts";
 import {useState} from "react";
@@ -25,15 +26,12 @@ export const UserPlaylists = ({playlists}: UserPlaylistsProps) => {
                 <>
                     {playlists.map((playlist: Playlist) => (
                         <div className="playlist" key={playlist.id}>
-                            <div className="playlist-header">
+                            <button className="toggle-tracks-btn" onClick={() => togglePlaylist(playlist.id)}>
                                 <h3>{playlist.title}</h3>
-                                <button
-                                    onClick={() => togglePlaylist(playlist.id)}
-                                    className="toggle-tracks-btn"
-                                >
+                                <div>
                                     {expandedPlaylists[playlist.id] ? <RollUp /> : <Expand />}
-                                </button>
-                            </div>
+                                </div>
+                            </button>
                             {expandedPlaylists[playlist.id] && <UserTracks tracks={playlist.tracks}/>}
                         </div>
                     ))}

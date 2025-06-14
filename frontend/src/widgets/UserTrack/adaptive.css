@@ -1,0 +1,9 @@
+@media (max-width: 600px) {
+    .user-track-container {
+        width: 6rem;
+    }
+
+    .user-track-container img {
+        width: 5rem;
+    }
+}

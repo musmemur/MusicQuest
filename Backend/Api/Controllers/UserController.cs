@@ -1,10 +1,7 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using Backend.Api.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
-using Backend.Domain.Services;
 using Backend.Infrastructure.Services;
-using Backend.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +16,7 @@ public class UserController(
     IPasswordHasher<User> passwordHasher, 
     ImageSaver imageSaver,
     IValidator<CreateUserRequest> createUserValidator, 
-    ILogger<UserService> logger) : ControllerBase
+    ILogger<UserService> logger, IUserService userService) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserRequest request, CancellationToken ct)
@@ -116,8 +113,7 @@ public class UserController(
     [HttpGet("me")]
     public async Task<IActionResult> Me(CancellationToken ct)
     {
-        var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-                     ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = userService.GetUserId();
 
         if (userId == null)
         {
@@ -125,14 +121,13 @@ public class UserController(
             return Unauthorized(new { message = "Пользователь не авторизован" });
         }
 
-        var guid = Guid.Parse(userId);
-        logger.LogDebug("Запрос информации о пользователе {UserId}", guid);
+        logger.LogDebug("Запрос информации о пользователе {UserId}", userId);
 
-        var user = await userRepository.GetByIdAsync(guid);
+        var user = await userRepository.GetByIdAsync(userId);
 
         if (user == null)
         {
-            logger.LogWarning("Пользователь {UserId} не найден в базе", guid);
+            logger.LogWarning("Пользователь {UserId} не найден в базе", userId);
             return Unauthorized(new { message = "Пользователь не найден" });
         }
 
@@ -158,7 +153,7 @@ public class UserController(
         }
         
         logger.LogDebug("Найдено {Count} плейлистов для пользователя {UserId}", 
-            userInfo.Playlists?.Count ?? 0, userId);
+            userInfo.Playlists.Count, userId);
     
         return Ok(userInfo);
     }

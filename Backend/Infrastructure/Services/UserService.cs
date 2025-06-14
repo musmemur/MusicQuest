@@ -1,9 +1,10 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Backend.Domain.Abstractions;
 
-namespace Backend.Domain.Services;
+namespace Backend.Infrastructure.Services;
 
-public class UserService(IHttpContextAccessor httpContextAccessor)
+public class UserService(IHttpContextAccessor httpContextAccessor) : IUserService
 {
     public Guid? GetUserId()
     {

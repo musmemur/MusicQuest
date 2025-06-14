@@ -1,4 +1,5 @@
 ﻿using Backend.Api.Services;
+using Backend.Application.Services;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Enums;
 using Microsoft.AspNetCore.SignalR;
@@ -18,7 +19,7 @@ public class QuizHub(
     {
         try
         {
-            var (room, user, isNewPlayer) = await roomService.JoinRoomAsync(roomId, userId);
+            var (user, isNewPlayer) = await roomService.JoinRoomAsync(roomId, userId);
             
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
             
@@ -72,7 +73,6 @@ public class QuizHub(
             logger.LogInformation("Game session {SessionId} started, notifying {PlayerCount} players", 
                 gameSessionId, room.Players.Count);
 
-            // Явно проверяем подключенных клиентов
             var group = Clients.Group(roomId);
             await group.SendAsync("GameStarted", gameSessionId);
             logger.LogInformation("GameStarted notification sent for session {SessionId}", gameSessionId);

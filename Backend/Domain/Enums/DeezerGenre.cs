@@ -2,12 +2,12 @@
 
 public enum DeezerGenre
 {
-    Pop = 152,
+    Pop = 132,
     Alternative = 85,
-    Rock = 132,
+    Rock = 152,
     HipHop = 116,
     Dance = 113,
-    Electronic = 153,
-    Jazz = 144,
-    Metal = 129,
+    Electronic = 106,
+    Country = 84,
+    Metal = 464,
 }

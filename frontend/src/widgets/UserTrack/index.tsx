@@ -1,4 +1,5 @@
 import './index.css';
+import './adaptive.css';
 import type { Track } from "../../entities/Track.ts";
 import { PausedTrack } from "../../shared/assets/svg/PausedTrack.tsx";
 

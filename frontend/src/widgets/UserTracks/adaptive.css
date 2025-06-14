@@ -1,0 +1,7 @@
+@media (max-width: 800px) {
+    .user-tracks {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-left: 15rem;
+    }
+}

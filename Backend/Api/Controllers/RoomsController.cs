@@ -1,10 +1,10 @@
 ﻿using System.Security.Claims;
 using Backend.Api.Hubs;
+using Backend.Api.Models;
+using Backend.Application.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
 using Backend.Domain.Enums;
-using Backend.Domain.Models;
-using Backend.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -99,7 +99,6 @@ public class RoomsController(
             logger.LogInformation("Комната успешно создана. ID: {RoomId}, Хост: {UserId}", 
                 roomId, userId);
             
-            // Отправляем уведомление о новой комнате всем клиентам
             await hubContext.Clients.All.SendAsync("RoomCreated", new RoomDto
             {
                 Id = room.Id.ToString(),

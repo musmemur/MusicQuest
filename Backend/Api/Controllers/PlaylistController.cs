@@ -1,5 +1,4 @@
-﻿using Backend.DataBase;
-using Backend.Infrastructure.DataBase;
+﻿using Backend.Infrastructure.DataBase;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

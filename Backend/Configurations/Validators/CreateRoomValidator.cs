@@ -1,5 +1,5 @@
-﻿using Backend.Domain.Enums;
-using Backend.Models;
+﻿using Backend.Api.Models;
+using Backend.Domain.Enums;
 using FluentValidation;
 namespace Backend.Configurations.Validators;
 

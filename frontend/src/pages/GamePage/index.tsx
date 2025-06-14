@@ -1,4 +1,5 @@
 import './index.css';
+import './adaptive.css';
 import { useParams } from "react-router-dom";
 import { useSignalR } from "../../app/signalRContext.tsx";
 import {useEffect, useRef, useState} from "react";

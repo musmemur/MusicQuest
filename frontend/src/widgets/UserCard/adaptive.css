@@ -1,0 +1,7 @@
+@media (max-width: 800px) {
+    .user-card {
+        align-self: center;
+        width: 90%;
+        align-items: center;
+    }
+}

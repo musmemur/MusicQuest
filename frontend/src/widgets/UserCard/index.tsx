@@ -1,4 +1,5 @@
 import './index.css';
+import './adaptive.css';
 import photoPlaceholder from '../../shared/assets/photo-placeholder.png'
 import type {UserWithPlaylists} from "../../processes/fetchUserWithPlaylists.ts";
 

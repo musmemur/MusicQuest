@@ -24,7 +24,7 @@ public class PlaylistService(
                 return;
             }
 
-            var tracks = await deezerClient.GetTracksByGenreAsync(genre);
+            var tracks = await deezerClient.GenerateTracksToPlaylistByGenreAsync(genre);
             var playlist = new Playlist(Guid.Parse(winnerId), $"Playlist of {genre} Music")
             {
                 GameSessionId = Guid.Parse(gameSessionId)

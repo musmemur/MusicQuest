@@ -1,8 +1,3 @@
-﻿namespace Backend.Models;
+﻿namespace Backend.Api.Models;
 
-public class CreateRoomRequest
-{
-    public string Genre { get; set; }
-    public int QuestionCount { get; set; }
-    public Guid UserHostId { get; set; }
-}
+public record CreateRoomRequest(string Genre, int QuestionCount, Guid UserHostId);

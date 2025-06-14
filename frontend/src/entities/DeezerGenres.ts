@@ -1,10 +1,10 @@
 export const DeezerGenres = [
-    { id: 152, name: 'Pop' },
+    { id: 132, name: 'Pop' },
     { id: 85, name: 'Alternative' },
-    { id: 132, name: 'Rock' },
+    { id: 152, name: 'Rock' },
     { id: 116, name: 'HipHop' },
     { id: 113, name: 'Dance' },
-    { id: 144, name: 'Jazz' },
-    { id: 129, name: 'Metal' },
-    { id: 153, name: 'Electronic' },
+    { id: 84, name: 'Country' },
+    { id: 464, name: 'Metal' },
+    { id: 106, name: 'Electronic' },
 ];

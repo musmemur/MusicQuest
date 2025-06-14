@@ -1,0 +1,17 @@
+@media (max-width: 1000px) {
+    .userPage-main {
+        gap: 5rem;
+    }
+}
+
+@media (max-width: 800px) {
+    .userPage-main {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 500px) {
+    .userPage-main {
+        margin: 2rem 0.5rem;
+    }
+}

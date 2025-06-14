@@ -1,4 +1,5 @@
 import './index.css';
+import './adaptive.css';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import { Header } from "../../widgets/Header";
@@ -94,12 +95,12 @@ export const WaitingRoomPage = () => {
         <>
             <Header />
             <div className="waiting-room-content">
-                <h2>Ожидание игроков (Комната #{roomId})</h2>
-
+                <h2>Ожидание игроков</h2>
+                <h3><strong>Комната</strong> #{roomId}</h3>
                 {error && <div className="error-message">{error}</div>}
 
                 <div className="players-list">
-                    <span>Игроков в комнате ({players.length}):</span>
+                    <span><strong>Игроков в комнате ({players.length}):</strong></span>
                     <ul>
                         {players.map((player) => (
                             <li key={player.userId}>

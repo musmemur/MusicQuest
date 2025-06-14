@@ -1,4 +1,5 @@
 import './index.css';
+import './adaptive.css';
 import {Header} from "../../widgets/Header";
 import {UserCard} from "../../widgets/UserCard";
 import {UserData} from "../../widgets/UserData";

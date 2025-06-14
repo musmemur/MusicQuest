@@ -1,0 +1,11 @@
+@media (max-width: 400px) {
+    .waiting-room-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .waiting-room-content h3 {
+        margin-top: 0;
+    }
+}

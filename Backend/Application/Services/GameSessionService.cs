@@ -1,15 +1,15 @@
-﻿using Backend.Domain.Abstractions;
+﻿using Backend.Application.Models;
+using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
-using Backend.Domain.Models;
 using Backend.Infrastructure.Services;
 
-namespace Backend.Api.Services;
+namespace Backend.Application.Services;
 
 public class GameSessionService(
     IGameSessionRepository gameSessionRepository,
     IPlayerRepository playerRepository,
     IRoomRepository roomRepository,
-    ILogger<GameSessionService> logger, DeezerApiClient deezerClient)
+    ILogger<GameSessionService> logger, DeezerApiClient deezerApiClient)
 {
     public async Task<string> StartNewSessionAsync(string roomId, List<QuizQuestion> questions)
     {
@@ -103,7 +103,7 @@ public class GameSessionService(
         {
             GameId = gameSession.Id,
             RoomId = gameSession.RoomId,
-            Genre = deezerClient.ToDisplayString(gameSession.Room.Genre),
+            Genre = deezerApiClient.ToDisplayString(gameSession.Room.Genre),
             WinnerId = winner.UserId,
             WinnerName = winner.User.Username,
             Scores = scores

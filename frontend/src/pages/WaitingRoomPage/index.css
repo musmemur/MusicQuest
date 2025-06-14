@@ -3,6 +3,10 @@
     padding: 2rem;
 }
 
+.waiting-room-content h3 {
+    font-weight: 400;
+}
+
 .players-list li {
     display: flex;
     align-items: center;

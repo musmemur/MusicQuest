@@ -1,4 +1,4 @@
-﻿namespace Backend.Models;
+﻿namespace Backend.Api.Models;
 
 public class Photo
 {

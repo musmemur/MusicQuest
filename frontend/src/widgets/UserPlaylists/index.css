@@ -2,13 +2,20 @@
     border-radius: 0.5rem;
 }
 
-.playlist-header {
+.toggle-tracks-btn {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
     font-size: 1.5rem;
     gap: 3rem;
     justify-content: space-between;
+    background: none;
+    border: none;
+    width: 100%;
+}
+
+.toggle-tracks-btn h3 {
+    font-weight: 400;
 }
 
 .playlist {
@@ -22,7 +29,7 @@
     background: none;
 }
 
-.playlist-header > button svg {
+.toggle-tracks-btn > div svg {
     width: 4rem;
     height: 4rem;
 }

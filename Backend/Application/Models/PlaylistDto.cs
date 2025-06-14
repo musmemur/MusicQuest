@@ -1,8 +1,8 @@
-﻿namespace Backend.Domain.Models;
+﻿namespace Backend.Application.Models;
 
 public class PlaylistDto
 {
     public Guid Id { get; set; }
     public string Title { get; set; }
-    public List<TrackDto> Tracks { get; set; }
+    public List<TrackDto> Tracks { get; set; } = [];
 }

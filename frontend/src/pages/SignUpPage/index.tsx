@@ -1,4 +1,5 @@
 import './index.css';
+import './adaptive.css';
 import type {FC} from "react";
 import {useNavigate} from "react-router";
 

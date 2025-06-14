@@ -70,14 +70,14 @@ export const CreateRoomPage = () => {
                 <h1>Создать комнату</h1>
 
                 <div className="form-group">
-                    <label htmlFor="genre-select">Выберите жанр музыки:</label>
+                    <label htmlFor="genre-select">Выберите жанр музыки</label>
                     <select
                         id="genre-select"
                         value={selectedGenre || ''}
                         onChange={(e) => setSelectedGenre(Number(e.target.value))}
                         className="form-control"
                     >
-                        <option value="" disabled>-- Выберите жанр --</option>
+                        <option value="" disabled>-- Выбрать жанр --</option>
                         {DeezerGenres.map(genre => (
                             <option key={genre.id} value={genre.id}>
                                 {genre.name}
@@ -87,7 +87,7 @@ export const CreateRoomPage = () => {
                 </div>
 
                 <div className="form-group">
-                    <label>Количество вопросов:</label>
+                    <label>Выберите количество вопросов</label>
                     <div className="question-count-buttons">
                         {QUESTION_COUNTS.map(count => (
                             <button
@@ -103,7 +103,7 @@ export const CreateRoomPage = () => {
 
                 <button
                     onClick={handleCreateRoom}
-                    disabled={isCreating || !selectedGenre}
+                    disabled={isCreating || !selectedGenre || !questionCount}
                     className="create-btn"
                 >
                     {isCreating ? 'Создание...' : 'Создать комнату'}

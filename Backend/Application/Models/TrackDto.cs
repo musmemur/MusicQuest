@@ -1,4 +1,4 @@
-﻿namespace Backend.Domain.Models;
+﻿namespace Backend.Application.Models;
 
 public class TrackDto
 {

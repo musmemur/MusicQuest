@@ -1,7 +1,7 @@
 ﻿
+using Backend.Application.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
-using Backend.Domain.Models;
 
 namespace Backend.Api.Services;
 
@@ -11,7 +11,7 @@ public class RoomService(
     IUserRepository userRepository,
     ILogger<RoomService> logger)
 {
-    public async Task<(Room Room, User User, bool IsNewPlayer)> JoinRoomAsync(string roomId, string userId)
+    public async Task<(User User, bool IsNewPlayer)> JoinRoomAsync(string roomId, string userId)
     {
         var room = await roomRepository.GetByIdAsync(Guid.Parse(roomId));
         if (room == null)
@@ -41,7 +41,7 @@ public class RoomService(
         }
 
         logger.LogInformation("User {Username} joined room {RoomId}", user.Username, roomId);
-        return (room, user, isNewPlayer);
+        return (user, isNewPlayer);
     }
 
     public async Task<IEnumerable<PlayerDto>> GetRoomPlayersAsync(string roomId)

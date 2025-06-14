@@ -35,3 +35,13 @@
         width: 100%;
     }
 }
+
+@media (max-width: 300px) {
+    .landing-list {
+        padding-left: 1rem;
+    }
+
+    .signUp-button {
+        font-size: 1.5rem;
+    }
+}
