@@ -9,6 +9,10 @@
     position: relative;
 }
 
+.user-track-photo-container {
+    position: relative;
+}
+
 .user-track-info {
     text-align: center;
     display: -webkit-box;
