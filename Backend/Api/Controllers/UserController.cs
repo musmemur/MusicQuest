@@ -1,4 +1,6 @@
-﻿using Backend.Api.Models;
+﻿using AutoMapper;
+using Backend.Api.Models;
+using Backend.Application.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
 using Backend.Infrastructure.Services;
@@ -16,7 +18,7 @@ public class UserController(
     IPasswordHasher<User> passwordHasher, 
     ImageSaver imageSaver,
     IValidator<CreateUserRequest> createUserValidator, 
-    ILogger<UserService> logger, IUserService userService) : ControllerBase
+    ILogger<UserService> logger, IUserService userService, IMapper mapper) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserRequest request, CancellationToken ct)
@@ -144,13 +146,15 @@ public class UserController(
     {
         logger.LogInformation("Запрос информации о пользователе с плейлистами {UserId}", userId);
         
-        var userInfo = await userRepository.GetUserWithPlaylistsDtoAsync(userId);
+        var user = await userRepository.GetUserWithPlaylistsDtoAsync(userId);
     
-        if (userInfo == null)
+        if (user == null)
         {
             logger.LogWarning("Пользователь с плейлистами {UserId} не найден", userId);
             return NotFound();
         }
+        
+        var userInfo = mapper.Map<UserWithPlaylistsDto>(user);
         
         logger.LogDebug("Найдено {Count} плейлистов для пользователя {UserId}", 
             userInfo.Playlists.Count, userId);

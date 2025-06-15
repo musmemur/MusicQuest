@@ -36,31 +36,13 @@ namespace Backend.Infrastructure.DataBase.Users
             await context.SaveChangesAsync();
         }
 
-        public async Task<UserWithPlaylistsDto?> GetUserWithPlaylistsDtoAsync(Guid userId)
+        public async Task<User?> GetUserWithPlaylistsDtoAsync(Guid userId)
         {
             return await context.Users
-                .Where(u => u.Id == userId)
-                .Select(u => new UserWithPlaylistsDto
-                {
-                    Id = u.Id,
-                    Username = u.Username,
-                    UserPhoto = u.UserPhoto,
-                    Playlists = u.Playlists.Select(p => new PlaylistDto
-                    {
-                        Id = p.Id,
-                        Title = p.Title,
-                        Tracks = p.PlaylistTracks.Select(pt => new TrackDto
-                        {
-                            Id = pt.Track.Id,
-                            DeezerTrackId = pt.Track.DeezerTrackId,
-                            Title = pt.Track.Title,
-                            Artist = pt.Track.Artist,
-                            PreviewUrl = pt.Track.PreviewUrl,
-                            CoverUrl = pt.Track.CoverUrl
-                        }).ToList()
-                    }).ToList()
-                })
-                .FirstOrDefaultAsync();
+                .Include(u => u.Playlists)
+                .ThenInclude(p => p.PlaylistTracks)
+                .ThenInclude(pt => pt.Track)
+                .FirstOrDefaultAsync(u => u.Id == userId);
         }
     }
 }

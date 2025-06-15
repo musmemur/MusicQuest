@@ -1,29 +1,21 @@
-﻿using Backend.Application.Models;
-using Backend.Domain.Abstractions;
+﻿using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
-using Backend.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Infrastructure.DataBase.Rooms
 {
-    public class RoomRepository(AppDbContext context, DeezerApiClient deezerApiClient) : IRoomRepository
+    public class RoomRepository(AppDbContext context) : IRoomRepository
     {
         public async Task<Room?> GetByIdAsync(Guid id)
         {
             return await context.Rooms.FindAsync(id);
         }
 
-        public async Task<IEnumerable<RoomDto>> GetActiveRoomsAsync()
+        public async Task<IEnumerable<Room>> GetActiveRoomsAsync()
         {
             return await context.Rooms
                 .Where(r => r.IsActive)
-                .Select(r => new RoomDto
-                {
-                    Id = r.Id.ToString(),
-                    Name = r.Name,
-                    Genre = deezerApiClient.ToDisplayString(r.Genre),
-                    PlayersCount = r.Players.Count
-                })
+                .Include(r => r.Players) 
                 .ToListAsync();
         }
 

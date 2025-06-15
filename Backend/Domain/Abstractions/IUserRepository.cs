@@ -10,5 +10,5 @@ public interface IUserRepository
     Task<bool> UsernameExistsAsync(string username);
     Task AddAsync(User user);
     Task UpdateAsync(User user);
-    Task<UserWithPlaylistsDto?> GetUserWithPlaylistsDtoAsync(Guid userId);
+    Task<User?> GetUserWithPlaylistsDtoAsync(Guid userId);
 }

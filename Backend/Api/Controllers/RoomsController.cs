@@ -1,10 +1,12 @@
 ﻿using System.Security.Claims;
+using AutoMapper;
 using Backend.Api.Hubs;
 using Backend.Api.Models;
 using Backend.Application.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
 using Backend.Domain.Enums;
+using Backend.Infrastructure.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,9 +21,9 @@ public class RoomsController(
     IPlayerRepository playerRepository, 
     IValidator<CreateRoomRequest> createRoomValidator,
     ILogger<RoomsController> logger,
-    IHubContext<QuizHub> hubContext) : ControllerBase
+    IHubContext<QuizHub> hubContext, DeezerApiClient deezerApiClient,
+    IMapper mapper) : ControllerBase
 {
-    // GET: api/rooms
     [HttpGet]
     public async Task<ActionResult<IEnumerable<RoomDto>>> GetRooms()
     {
@@ -30,8 +32,13 @@ public class RoomsController(
         try
         {
             var rooms = await roomRepository.GetActiveRoomsAsync();
+            var roomDtos = mapper.Map<IEnumerable<RoomDto>>(
+                rooms, 
+                opt => opt.Items["DeezerApiClient"] = deezerApiClient
+            );
+            
             logger.LogDebug("Найдено {RoomCount} активных комнат", rooms.Count());
-            return Ok(rooms);
+            return Ok(roomDtos);
         }
         catch (Exception ex)
         {
@@ -40,7 +47,6 @@ public class RoomsController(
         }
     }
 
-    // POST: api/rooms
     [HttpPost]
     [Authorize]
     public async Task<ActionResult<RoomDto>> CreateRoom([FromBody] CreateRoomRequest request)
