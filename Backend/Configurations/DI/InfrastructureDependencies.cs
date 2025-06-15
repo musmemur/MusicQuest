@@ -1,4 +1,5 @@
-﻿using Backend.Configurations.Options;
+﻿using Backend.Application.Abstractions;
+using Backend.Configurations.Options;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
 using Backend.Infrastructure.DataBase;
@@ -22,7 +23,7 @@ public static class InfrastructureDependencies
         IConfiguration configuration)
     {
         services.AddScoped<AppDbContext>();
-        services.AddScoped<ImageSaver>();
+        services.AddScoped<IPhotoSaver, PhotoSaver>();
         
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoomRepository, RoomRepository>();
@@ -33,9 +34,8 @@ public static class InfrastructureDependencies
         services.AddScoped<IPlaylistTrackRepository, PlaylistTrackRepository>();
         services.AddScoped<ITrackRepository, TrackRepository>();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-
         
-        services.AddHttpClient<DeezerApiClient>();
+        services.AddHttpClient<IDeezerApiClient, DeezerApiClient>();
         services.Configure<MinioSettings>(configuration.GetSection("Minio"));
         
         return services;

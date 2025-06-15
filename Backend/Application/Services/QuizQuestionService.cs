@@ -1,12 +1,11 @@
-﻿using Backend.Domain.Abstractions;
+﻿using Backend.Application.Abstractions;
 using Backend.Domain.Entities;
 using Backend.Domain.Enums;
-using Backend.Infrastructure.Services;
-using Microsoft.Extensions.Logging;
 
-namespace Backend.Api.Services;
+namespace Backend.Application.Services;
 
-public class QuizQuestionService(DeezerApiClient deezerClient, ILogger<QuizQuestionService> logger)
+public class QuizQuestionService(IDeezerApiClient deezerClient, 
+    ILogger<IQuizQuestionService> logger) : IQuizQuestionService
 {
     public async Task<List<QuizQuestion>> GenerateQuestionsAsync(DeezerGenre genre, int count)
     {

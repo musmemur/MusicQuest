@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Backend.Api.Models;
+using Backend.Application.Abstractions;
 using Backend.Application.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
@@ -16,7 +17,7 @@ public class UserController(
     IUserRepository userRepository, 
     JwtService jwtService, 
     IPasswordHasher<User> passwordHasher, 
-    ImageSaver imageSaver,
+    IPhotoSaver imageSaver,
     IValidator<CreateUserRequest> createUserValidator, 
     ILogger<UserService> logger, IUserService userService, IMapper mapper) : ControllerBase
 {
@@ -49,7 +50,7 @@ public class UserController(
 
                 var imageBytes = Convert.FromBase64String(base64Data);
                 logger.LogDebug("Сохранение фото в S3");
-                var photoPath = await imageSaver.SaveImageToS3(imageBytes, mimeType, "soundquestphotos");
+                var photoPath = await imageSaver.SavePhotoToS3(imageBytes, mimeType, "soundquestphotos");
                 request.UserPhoto.FileName = photoPath;
                 request.UserPhoto.Data = null;
             }

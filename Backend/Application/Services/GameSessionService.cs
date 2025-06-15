@@ -1,4 +1,5 @@
-﻿using Backend.Application.Models;
+﻿using Backend.Application.Abstractions;
+using Backend.Application.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
 using Backend.Infrastructure.Services;
@@ -9,7 +10,8 @@ public class GameSessionService(
     IGameSessionRepository gameSessionRepository,
     IPlayerRepository playerRepository,
     IRoomRepository roomRepository,
-    ILogger<GameSessionService> logger, DeezerApiClient deezerApiClient)
+    ILogger<IGameSessionService> logger, 
+    IDeezerApiClient deezerApiClient) : IGameSessionService
 {
     public async Task<string> StartNewSessionAsync(string roomId, List<QuizQuestion> questions)
     {

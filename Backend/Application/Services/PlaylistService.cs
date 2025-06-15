@@ -1,18 +1,18 @@
-﻿using Backend.Domain.Abstractions;
+﻿using Backend.Application.Abstractions;
+using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
 using Backend.Domain.Enums;
 using Backend.Infrastructure.DataBase;
-using Backend.Infrastructure.Services;
 
-namespace Backend.Api.Services;
+namespace Backend.Application.Services;
 
 public class PlaylistService(
     IPlaylistRepository playlistRepository,
     IPlaylistTrackRepository playlistTrackRepository,
     ITrackRepository trackRepository,
-    DeezerApiClient deezerClient,
+    IDeezerApiClient deezerClient,
     AppDbContext dbContext,
-    ILogger<PlaylistService> logger)
+    ILogger<IPlaylistService> logger) : IPlaylistService
 {
     public async Task CreateWinnerPlaylistAsync(string gameSessionId, string winnerId, DeezerGenre genre)
     {

@@ -1,10 +1,11 @@
-﻿using Backend.Application.Models;
+﻿using Backend.Application.Abstractions;
+using Backend.Application.Models;
 using Backend.Domain.Entities;
 using Backend.Domain.Enums;
 
 namespace Backend.Infrastructure.Services;
 
-public class DeezerApiClient(HttpClient httpClient)
+public class DeezerApiClient(HttpClient httpClient) : IDeezerApiClient
 {
     private const string BaseUrl = "https://api.deezer.com";
     private readonly Random _random = new();
@@ -157,7 +158,7 @@ public class DeezerApiClient(HttpClient httpClient)
             DeezerGenre.Pop => "Pop",
             DeezerGenre.Alternative => "Alternative",
             DeezerGenre.Rock => "Rock",
-            DeezerGenre.HipHop => "Hip-Hop",
+            DeezerGenre.HipHop => "HipHop",
             DeezerGenre.Dance => "Dance",
             DeezerGenre.Electronic => "Electronic",
             DeezerGenre.Country => "Country",

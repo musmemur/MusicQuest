@@ -1,15 +1,15 @@
-﻿
+﻿using Backend.Application.Abstractions;
 using Backend.Application.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
 
-namespace Backend.Api.Services;
+namespace Backend.Application.Services;
 
 public class RoomService(
     IRoomRepository roomRepository,
     IPlayerRepository playerRepository,
     IUserRepository userRepository,
-    ILogger<RoomService> logger)
+    ILogger<IRoomService> logger) : IRoomService
 {
     public async Task<(User User, bool IsNewPlayer)> JoinRoomAsync(string roomId, string userId)
     {

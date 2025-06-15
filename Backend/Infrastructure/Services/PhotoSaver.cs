@@ -1,15 +1,16 @@
-﻿using Backend.Configurations.Options;
+﻿using Backend.Application.Abstractions;
+using Backend.Configurations.Options;
 using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
 
 namespace Backend.Infrastructure.Services;
 
-public class ImageSaver(IOptions<MinioSettings> settings)
+public class PhotoSaver(IOptions<MinioSettings> settings) : IPhotoSaver
 {
     private readonly MinioSettings _settings = settings.Value;
 
-    public async Task<string> SaveImageToS3(byte[] imageBytes, string mimeType, string bucketName)
+    public async Task<string> SavePhotoToS3(byte[] imageBytes, string mimeType, string bucketName)
     {
         var fileExtension = mimeType switch
         {

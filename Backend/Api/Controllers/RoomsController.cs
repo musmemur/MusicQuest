@@ -2,6 +2,7 @@
 using AutoMapper;
 using Backend.Api.Hubs;
 using Backend.Api.Models;
+using Backend.Application.Abstractions;
 using Backend.Application.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
@@ -21,7 +22,7 @@ public class RoomsController(
     IPlayerRepository playerRepository, 
     IValidator<CreateRoomRequest> createRoomValidator,
     ILogger<RoomsController> logger,
-    IHubContext<QuizHub> hubContext, DeezerApiClient deezerApiClient,
+    IHubContext<QuizHub> hubContext, IDeezerApiClient deezerApiClient,
     IMapper mapper) : ControllerBase
 {
     [HttpGet]

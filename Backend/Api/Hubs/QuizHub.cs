@@ -1,5 +1,4 @@
-﻿using Backend.Api.Services;
-using Backend.Application.Services;
+﻿using Backend.Application.Abstractions;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Enums;
 using Microsoft.AspNetCore.SignalR;
@@ -7,13 +6,13 @@ using Microsoft.AspNetCore.SignalR;
 namespace Backend.Api.Hubs;
 
 public class QuizHub(
-    GameSessionService gameSessionService,
-    QuizQuestionService quizQuestionService,
+    IGameSessionService gameSessionService,
+    IQuizQuestionService quizQuestionService,
     IGameSessionRepository gameSessionRepository,
-    RoomService roomService,
+    IRoomService roomService,
     IRoomRepository roomRepository,
     ILogger<QuizHub> logger,
-    PlaylistService playlistService) : Hub
+    IPlaylistService playlistService) : Hub
 {
     public async Task JoinRoom(string roomId, string userId)
     {
