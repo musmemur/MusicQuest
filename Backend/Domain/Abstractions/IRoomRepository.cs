@@ -11,4 +11,5 @@ public interface IRoomRepository
     Task RemoveAsync(Room room);
     Task<Room?> GetRoomWithPlayersAsync(Guid roomId);
     Task<bool> IsUserInRoomAsync(Guid roomId, Guid userId);
+    Task<Room?> GetRoomByPlayerAsync(Guid userId);
 }

@@ -7,7 +7,6 @@ using Backend.Application.Models;
 using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
 using Backend.Domain.Enums;
-using Backend.Infrastructure.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

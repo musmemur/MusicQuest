@@ -23,28 +23,13 @@ export const GamePage = () => {
     const questionTimerRef = useRef(questionTimer);
     const countdownTimerRef = useRef(questionTimer);
     const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
-    const [isHost, setIsHost] = useState(false);
-    const [isHostChecked, setIsHostChecked] = useState(false);
 
     useEffect(() => {
         if (!connection || !gameId) return;
 
         const initializeGame = async () => {
             try {
-                const fetchedUser = await fetchAuthUserData();
-                const loggedUser: User = fetchedUser as User;
-
-                connection.on("ReceiveHostStatus", (isHost: boolean) => {
-                    setIsHost(isHost);
-                    setIsHostChecked(true);
-
-                    if (isHost) {
-                        connection.invoke("GetNextQuestion", gameId);
-                    }
-                });
-
-                await connection.invoke("IsUserHost", gameId, loggedUser.userId);
-
+                connection.invoke("GetNextQuestion", gameId);
             } catch (error) {
                 console.error("Error initializing game:", error);
             }
@@ -60,7 +45,7 @@ export const GamePage = () => {
     }, [connection, gameId]);
 
     useEffect(() => {
-        if (!connection || !gameId || !isHostChecked) return;
+        if (!connection || !gameId) return;
 
         const startQuestionTimer = () => {
             if (questionTimerRef.current) {
@@ -68,9 +53,9 @@ export const GamePage = () => {
             }
 
             questionTimerRef.current = setTimeout(() => {
-                if (isHost) {
-                    connection.invoke("GetNextQuestion", gameId);
-                }
+                connection.invoke("GetNextQuestion", gameId).catch(err => {
+                    console.error("Error getting next question:", err);
+                });
             }, questionTimer * 1000);
         };
 
@@ -106,7 +91,7 @@ export const GamePage = () => {
                 clearInterval(countdownTimerRef.current);
             }
         };
-    }, [gameId, connection, navigate, isHost, isHostChecked]);
+    }, [gameId, connection, navigate]);
 
     useEffect(() => {
         if (countdownTimerRef.current) {

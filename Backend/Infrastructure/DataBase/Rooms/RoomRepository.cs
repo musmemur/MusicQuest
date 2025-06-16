@@ -50,5 +50,14 @@ namespace Backend.Infrastructure.DataBase.Rooms
             return await context.Players
                 .AnyAsync(p => p.RoomId == roomId && p.UserId == userId);
         }
+        
+        public async Task<Room?> GetRoomByPlayerAsync(Guid userId)
+        {
+            return await context.Rooms
+                .Include(r => r.Players)
+                .ThenInclude(p => p.User)
+                .Where(r => r.IsActive && r.Players.Any(p => p.UserId == userId))
+                .FirstOrDefaultAsync();
+        }
     }
 }

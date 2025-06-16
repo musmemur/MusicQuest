@@ -6,8 +6,8 @@ import type { User } from "../../entities/User.ts";
 import { Header } from "../../widgets/Header";
 import './index.css';
 import photoPlaceholder from '../../shared/assets/photo-placeholder.png';
-import {Link} from "react-router";
-import type {GameResultsDto} from "../../entities/GameResultsDto.ts";
+import { Link } from "react-router-dom";
+import type { GameResultsDto } from "../../entities/GameResultsDto.ts";
 
 export const GameResultsPage = () => {
     const { gameId } = useParams();
@@ -15,7 +15,6 @@ export const GameResultsPage = () => {
     const connection = useSignalR();
     const [results, setResults] = useState<GameResultsDto | null>(null);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [isWinner, setIsWinner] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -24,40 +23,15 @@ export const GameResultsPage = () => {
         const initializeGame = async () => {
             try {
                 const fetchedUser = await fetchAuthUserData();
-                const loggedUser: User = fetchedUser as User;
+                const loggedUser = fetchedUser as User;
                 setCurrentUser(loggedUser);
 
                 connection.on("ReceiveGameResults", (serverResults: GameResultsDto) => {
                     setResults(serverResults);
-                    if (loggedUser) {
-                        setIsWinner(serverResults.winnerId === loggedUser.userId);
-                    }
                     setLoading(false);
                 });
 
-                connection.on("Error", () => {
-                    setLoading(false);
-                });
-
-                connection.on("ReceiveHostStatus", (isHost: boolean) => {
-                    if (isHost) {
-                        connection.invoke("GetGameResults", gameId)
-                            .catch(err => {
-                                console.error("Error fetching game results:", err);
-                                setLoading(false);
-                            });
-                    } else {
-                        const timeout = setTimeout(() => {
-                            if (!results) {
-                                setLoading(false);
-                            }
-                        }, 15000);
-
-                        return () => clearTimeout(timeout);
-                    }
-                });
-
-                await connection.invoke("IsUserHost", gameId, loggedUser.userId);
+                await connection.invoke("GetGameResults", gameId);
 
             } catch (error) {
                 console.error("Error initializing game:", error);
@@ -65,20 +39,16 @@ export const GameResultsPage = () => {
             }
         };
 
-        (async () => {
-            await initializeGame();
-        })();
+        initializeGame();
 
         return () => {
-            connection.off("ReceiveHostStatus");
             connection.off("ReceiveGameResults");
-            connection.off("Error");
+            connection.stop().catch(err =>
+                console.error("Error disconnecting from hub:", err));
         };
-    }, [connection, gameId, results]);
+    }, [connection, gameId]);
 
-    const handleBackToHome = () => {
-        navigate(`/home`);
-    };
+    const isWinner = currentUser && results?.winnerId === currentUser.userId;
 
     if (loading) {
         return (
@@ -97,7 +67,9 @@ export const GameResultsPage = () => {
                 <Header />
                 <div className="error-container">
                     <p>No results found for this game.</p>
-                    <button onClick={handleBackToHome}>Back to Home</button>
+                    <button onClick={() => navigate('/home')} className="back-button">
+                        Back to Home
+                    </button>
                 </div>
             </div>
         );
@@ -119,7 +91,7 @@ export const GameResultsPage = () => {
                         <div className="playlist-reward">
                             <p>Congratulations! You've won a playlist with {results.genre} songs!</p>
                             <button
-                                onClick={() => navigate(`/user/${currentUser?.userId}`)}
+                                onClick={() => navigate(`/user/${currentUser.userId}`)}
                                 className="view-playlist-btn"
                             >
                                 View Your Playlists
@@ -139,10 +111,7 @@ export const GameResultsPage = () => {
                         </thead>
                         <tbody>
                         {sortedPlayers.map((player, index) => (
-                            <tr
-                                key={player.userId}
-                                className={player.userId === results.winnerId ? "winner-row" : ""}
-                            >
+                            <tr key={player.userId} className={player.userId === results.winnerId ? "winner-row" : ""}>
                                 <td>{index + 1}</td>
                                 <td>
                                     <Link to={`/user/${player.userId}`} className="player-info">
@@ -165,7 +134,7 @@ export const GameResultsPage = () => {
                 </div>
 
                 <div className="actions">
-                    <button onClick={handleBackToHome} className="back-button">
+                    <button onClick={() => navigate('/home')} className="back-button">
                         Back to Home
                     </button>
                 </div>
