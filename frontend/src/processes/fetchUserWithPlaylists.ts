@@ -6,6 +6,21 @@ export interface UserWithPlaylists extends User {
     playlists: Playlist[];
 }
 
+interface ApiPlaylist {
+    id: string;
+    title: string;
+    tracks?: ApiTrack[];
+}
+
+interface ApiTrack {
+    id: string;
+    deezerTrackId: string;
+    title: string;
+    artist: string;
+    previewUrl: string;
+    coverUrl: string;
+}
+
 export async function fetchUserWithPlaylists(userId: string): Promise<UserWithPlaylists> {
     try {
         const response = await axiosInstance.get(`/User/get-user-with-playlists/${userId}`);
@@ -14,10 +29,10 @@ export async function fetchUserWithPlaylists(userId: string): Promise<UserWithPl
             userId: response.data.id,
             username: response.data.username,
             userPhoto: response.data.userPhoto,
-            playlists: response.data.playlists?.map((playlist: any) => ({
+            playlists: response.data.playlists?.map((playlist: ApiPlaylist) => ({
                 id: playlist.id,
                 title: playlist.title,
-                tracks: playlist.tracks?.map((track: any) => ({
+                tracks: playlist.tracks?.map((track: ApiTrack) => ({
                     id: track.id,
                     deezerTrackId: track.deezerTrackId,
                     title: track.title,
