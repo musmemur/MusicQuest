@@ -56,7 +56,7 @@ public class RoomService(
         });
     }
     
-    public async Task LeaveRoomAsync(string roomId, string userId)
+    public async Task<bool> LeaveRoomAsync(string roomId, string userId)
     {
         var room = await roomRepository.GetRoomWithPlayersAsync(Guid.Parse(roomId));
         if (room == null)
@@ -77,10 +77,12 @@ public class RoomService(
 
         if (room.Players.All(p => p.Id == player.Id)) 
         {
-            room.IsActive = false;
-            await roomRepository.UpdateAsync(room);
+            await roomRepository.RemoveAsync(room);
             logger.LogInformation("Room {RoomId} closed (no players left)", roomId);
+            return true; // Комната была удалена
         }
+    
+        return false; // Комната не была удалена
     }
     
     public async Task SelectNewHostAsync(string roomId)

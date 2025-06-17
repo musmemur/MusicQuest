@@ -7,6 +7,6 @@ public interface IRoomService
 { 
      Task<(User User, bool IsNewPlayer)> JoinRoomAsync(string roomId, string userId);
      Task<IEnumerable<PlayerDto>> GetRoomPlayersAsync(string roomId);
-     Task LeaveRoomAsync(string roomId, string userId);
+     Task<bool> LeaveRoomAsync(string roomId, string userId);
      Task SelectNewHostAsync(string roomId);
 }

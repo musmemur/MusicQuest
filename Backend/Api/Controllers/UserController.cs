@@ -141,9 +141,7 @@ public class UserController(
     }
     
     [HttpGet("get-user-with-playlists/{userId:guid}")]
-    public async Task<IActionResult> GetUserWithPlaylists(
-        Guid userId, 
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetUserWithPlaylists(Guid userId)
     {
         logger.LogInformation("Запрос информации о пользователе с плейлистами {UserId}", userId);
         

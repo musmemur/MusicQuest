@@ -32,7 +32,6 @@ export const HomePage = () => {
             await fetchRooms();
         })();
 
-        // Подписываемся на событие создания новой комнаты
         if (connection) {
             connection.on("RoomCreated", (newRoom: Room) => {
                 setRooms(prevRooms => [...prevRooms, newRoom]);
@@ -44,7 +43,6 @@ export const HomePage = () => {
         }
 
         return () => {
-            // Отписываемся от событий при размонтировании компонента
             if (connection) {
                 connection.off("RoomCreated");
                 connection.off("RoomClosed");

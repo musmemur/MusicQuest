@@ -207,11 +207,16 @@ public class QuizHub(
             var room = await roomRepository.GetRoomByPlayerAsync(Guid.Parse(userId));
             if (room == null) return;
 
-            await roomService.LeaveRoomAsync(room.Id.ToString(), userId);
+            var roomWasRemoved = await roomService.LeaveRoomAsync(room.Id.ToString(), userId);
 
             await Clients.Group(room.Id.ToString()).SendAsync("PlayerLeft", userId);
+            
+            if (roomWasRemoved)
+            {
+                await Clients.All.SendAsync("RoomClosed", room.Id.ToString());
+            }
 
-            if (room.HostUserId.ToString() == userId)
+            else if (room.HostUserId.ToString() == userId)
             {
                 await roomService.SelectNewHostAsync(room.Id.ToString());
             }

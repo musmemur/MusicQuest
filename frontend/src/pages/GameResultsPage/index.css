@@ -91,7 +91,7 @@ th {
     background-color: #3367d6;
 }
 
-.loading-container, .error-container {
+.loading-container {
     text-align: center;
     padding: 2rem;
 }
