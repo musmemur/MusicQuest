@@ -10,44 +10,62 @@ import {ErrorContainer} from "../../widgets/ErrorContainer";
 
 export const UserPage = () => {
     const { userId } = useParams<{ userId?: string }>();
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true); // Начинаем с true
     const [user, setUser] = useState<UserWithPlaylists | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (userId) {
-            const fetchUserData = async () => {
-                try {
-                    setIsLoading(true);
-                    const userData = await fetchUserWithPlaylists(userId);
-                    setUser(userData);
-                } catch (error) {
-                    console.error("Error fetching user data:", error);
-                    setUser(null);
-                }
-            };
+        const fetchUserData = async () => {
+            if (!userId) {
+                setError("User ID is not provided");
+                setIsLoading(false);
+                return;
+            }
 
-            fetchUserData();
-        }
+            try {
+                setIsLoading(true);
+                setError(null);
+                const userData = await fetchUserWithPlaylists(userId);
+                setUser(userData);
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                setError("Failed to load user data");
+                setUser(null);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchUserData();
     }, [userId]);
 
-    if (!isLoading) {
-        return <div>Загрузка...</div>;
+    if (isLoading) {
+        return (
+            <div className="page-container">
+                <Header />
+                <div className="loading-container">
+                    <div>Загрузка...</div>
+                </div>
+            </div>
+        );
     }
 
-    if (!user) {
-        return <div>
-            <Header/>
-            <ErrorContainer />
-        </div>
+    if (error || !user) {
+        return (
+            <div className="page-container">
+                <Header />
+                <ErrorContainer />
+            </div>
+        );
     }
 
     return (
-        <>
-            <Header/>
+        <div className="page-container">
+            <Header />
             <main className="userPage-main">
-                <UserCard user={user}/>
-                <UserData playlists={user.playlists}/>
+                <UserCard user={user} />
+                <UserData playlists={user.playlists} />
             </main>
-        </>
+        </div>
     );
 };

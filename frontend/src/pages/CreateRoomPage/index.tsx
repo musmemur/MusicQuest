@@ -2,38 +2,30 @@ import './index.css';
 import {Header} from "../../widgets/Header";
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router";
-import {fetchAuthUserData} from "../../processes/fetchAuthUserData.ts";
-import type {User} from "../../entities/User.ts";
 import {useSignalR} from "../../app/signalRContext.tsx";
 import {DeezerGenres} from "../../entities/DeezerGenres.ts";
 import type {CreateRoomDto} from "../../entities/CreateRoomDto.ts";
 import {createRoom} from "../../processes/createRoom.ts";
+import type {AppDispatch, RootState} from "../../app/store.ts";
+import {useDispatch, useSelector} from "react-redux";
+import {loadAuthUser} from "../../features/loadAuthUser.ts";
 
 const QUESTION_COUNTS = [3, 4, 5];
 
 export const CreateRoomPage = () => {
     const navigate = useNavigate();
     const connection = useSignalR();
-    const [user, setUser] = useState<User | null>(null);
     const [selectedGenre, setSelectedGenre] = useState<number | null>(null);
     const [questionCount, setQuestionCount] = useState<number>(0);
     const [isCreating, setIsCreating] = useState(false);
+    const dispatch: AppDispatch = useDispatch();
+    const authUser = useSelector((state: RootState) => state.loadAuthUser.value);
 
     useEffect(() => {
-        const loadUser = async () => {
-            try {
-                const fetchedUser = await fetchAuthUserData();
-                const loggedUser: User = fetchedUser as User;
-                setUser(loggedUser);
-            } catch {
-                setUser(null);
-            }
-        };
-
-        (async () => {
-            await loadUser();
-        })();
-    }, []);
+        if (!authUser) {
+            dispatch(loadAuthUser());
+        }
+    }, [authUser, dispatch]);
 
     const handleCreateRoom = async () => {
         if (!selectedGenre) {
@@ -45,11 +37,11 @@ export const CreateRoomPage = () => {
 
         try {
             const genreName = DeezerGenres.find(g => g.id === selectedGenre)?.name || '';
-            if (user) {
+            if (authUser) {
                 const createRoomDto: CreateRoomDto = {
                     genre: genreName,
                     questionCount,
-                    userHostId: user.userId
+                    userHostId: authUser.userId
                 }
                 const createdRoom = await createRoom(createRoomDto);
                 if (connection) {

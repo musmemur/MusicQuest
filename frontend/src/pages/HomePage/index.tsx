@@ -8,6 +8,9 @@ import type {User} from "../../entities/User.ts";
 import {useSignalR} from "../../app/signalRContext.tsx";
 import {getActiveRooms} from "../../processes/getActiveRooms.ts";
 import type {Room} from "../../entities/Room.ts";
+import type {AppDispatch, RootState} from "../../app/store.ts";
+import {useDispatch, useSelector} from "react-redux";
+import {loadAuthUser} from "../../features/loadAuthUser.ts";
 
 export const HomePage = () => {
     const connection = useSignalR();
@@ -15,6 +18,14 @@ export const HomePage = () => {
     const [rooms, setRooms] = useState<Room[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
+    const dispatch: AppDispatch = useDispatch();
+    const authUser = useSelector((state: RootState) => state.loadAuthUser.value);
+
+    useEffect(() => {
+        if (!authUser) {
+            dispatch(loadAuthUser());
+        }
+    }, [authUser, dispatch]);
 
     useEffect(() => {
         const fetchRooms = async () => {
@@ -75,7 +86,7 @@ export const HomePage = () => {
             <main>
                 <div className="home-page-top">
                     <h1>Доступные комнаты</h1>
-                    <button onClick={() => navigate("/create-room")}>Создать комнату</button>
+                    <button onClick={() => navigate("/create-room")} disabled={!authUser}>Создать комнату</button>
                 </div>
                 <div className="available-rooms">
                     {isLoading ? (

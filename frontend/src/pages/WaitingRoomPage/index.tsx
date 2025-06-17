@@ -14,7 +14,6 @@ export const WaitingRoomPage = () => {
     const { roomId } = useParams();
     const [players, setPlayers] = useState<Player[]>([]);
     const [isGameStarting, setIsGameStarting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -48,14 +47,14 @@ export const WaitingRoomPage = () => {
                 });
 
                 connection.on("Error", (errorMessage: string) => {
-                    setError(errorMessage);
+                    console.error(errorMessage);
+                    navigate('/home')
                 });
 
                 await connection.invoke("JoinRoom", roomId, loggedUser.userId);
 
             } catch (err) {
                 console.error("Ошибка аутентификации:", err);
-                setError("Ошибка аутентификации");
             }
         };
 
@@ -82,7 +81,6 @@ export const WaitingRoomPage = () => {
             await connection.invoke("StartGame", roomId);
         } catch (error) {
             console.error("Ошибка при запуске игры:", error);
-            setError("Не удалось начать игру");
             setIsGameStarting(false);
         }
     };
@@ -97,7 +95,6 @@ export const WaitingRoomPage = () => {
             <div className="waiting-room-content">
                 <h2>Ожидание игроков</h2>
                 <h3><strong>Комната</strong> #{roomId}</h3>
-                {error && <div className="error-message">{error}</div>}
 
                 <div className="players-list">
                     <span><strong>Игроков в комнате ({players.length}):</strong></span>

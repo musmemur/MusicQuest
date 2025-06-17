@@ -1,32 +1,22 @@
 import "./index.css";
 import './adaptive.css';
 import {Link} from "react-router";
-import {useEffect, useState} from 'react';
-import {fetchAuthUserData} from "../../processes/fetchAuthUserData.ts";
-import type {User} from "../../entities/User.ts";
-import userPhotoPlaceholder from "../../shared/assets/photo-placeholder.png";
+import {useEffect} from 'react';
 import {LogOutButton} from "../../shared/ui/LogOutButton";
 import {Logo} from "../../shared/assets/svg/Logo.tsx";
+import type {AppDispatch, RootState} from "../../app/store.ts";
+import {useDispatch, useSelector} from "react-redux";
+import {loadAuthUser} from "../../features/loadAuthUser.ts";
 
 export const Header = () => {
-    const [authUser, setAuthUser] = useState<User | null>(null);
+    const dispatch: AppDispatch = useDispatch();
+    const authUser = useSelector((state: RootState) => state.loadAuthUser.value);
 
     useEffect(() => {
-        const loadUser = async () => {
-            try {
-                const fetchedUser = await fetchAuthUserData();
-                fetchedUser.userPhoto = fetchedUser.userPhoto || userPhotoPlaceholder;
-                const loggedUser: User = fetchedUser as User;
-                setAuthUser(loggedUser);
-            } catch {
-                setAuthUser(null);
-            }
-        };
-
-        (async () => {
-            await loadUser();
-        })();
-    }, []);
+        if (!authUser) {
+            dispatch(loadAuthUser());
+        }
+    }, [authUser, dispatch]);
 
     return (
         <header>
