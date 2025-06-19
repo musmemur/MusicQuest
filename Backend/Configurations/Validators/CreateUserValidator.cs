@@ -1,7 +1,7 @@
 ﻿using Backend.Api.Models;
+using FluentValidation;
 
 namespace Backend.Configurations.Validators;
-using FluentValidation;
 
 public class CreateUserValidator : AbstractValidator<CreateUserRequest>
 {

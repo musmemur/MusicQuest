@@ -1,6 +1,7 @@
 ﻿using Backend.Api.Models;
 using Backend.Domain.Enums;
 using FluentValidation;
+
 namespace Backend.Configurations.Validators;
 
 public class CreateRoomValidator : AbstractValidator<CreateRoomRequest>

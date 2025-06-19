@@ -1,5 +1,4 @@
-﻿using Backend.DataBase;
-using Backend.Domain.Abstractions;
+﻿using Backend.Domain.Abstractions;
 using Backend.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
