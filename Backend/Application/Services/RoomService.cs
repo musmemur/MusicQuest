@@ -79,10 +79,10 @@ public class RoomService(
         {
             await roomRepository.RemoveAsync(room);
             logger.LogInformation("Room {RoomId} closed (no players left)", roomId);
-            return true; // Комната была удалена
+            return true; 
         }
     
-        return false; // Комната не была удалена
+        return false;
     }
     
     public async Task SelectNewHostAsync(string roomId)
