@@ -4,7 +4,7 @@ export type GameResultsDto = {
     gameId: string;
     roomId: string;
     genre: string;
-    winnerId: string;
-    winnerName: string;
+    winners: string[];
+    winnerNames: string[];
     scores: Record<string, PlayerScoreDto>;
 };

@@ -91,8 +91,8 @@ public class GameSessionService(
             throw new ArgumentException("Game session not found");
         }
 
-        var winner = gameSession.Room.Players.OrderByDescending(p => p.Score).First();
-        var scores = gameSession.Room.Players.ToDictionary(
+        var players = gameSession.Room.Players;
+        var scores = players.ToDictionary(
             p => p.UserId.ToString(),
             p => new PlayerScoreDto
             {
@@ -101,13 +101,23 @@ public class GameSessionService(
                 Score = p.Score
             });
 
+        var maxScore = players.Max(p => p.Score);
+    
+        var winners = maxScore > 0 
+            ? players.Where(p => p.Score == maxScore).Select(p => p.UserId.ToString()).ToList()
+            : [];
+        
+        var winnerNames = winners.Count > 0
+            ? players.Where(p => winners.Contains(p.UserId.ToString())).Select(p => p.User.Username).ToList()
+            : [];
+
         return new GameResultDto
         {
             GameId = gameSession.Id,
             RoomId = gameSession.RoomId,
             Genre = deezerApiClient.ToDisplayString(gameSession.Room.Genre),
-            WinnerId = winner.UserId,
-            WinnerName = winner.User.Username,
+            Winners = winners,
+            WinnerNames = winnerNames,
             Scores = scores
         };
     }

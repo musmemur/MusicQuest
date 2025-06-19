@@ -50,7 +50,7 @@ public class UserController(
 
                 var imageBytes = Convert.FromBase64String(base64Data);
                 logger.LogDebug("Сохранение фото в S3");
-                var photoPath = await imageSaver.SavePhotoToS3(imageBytes, mimeType, "soundquestphotos");
+                var photoPath = await imageSaver.SavePhotoToS3(imageBytes, mimeType);
                 request.UserPhoto.FileName = photoPath;
                 request.UserPhoto.Data = null;
             }

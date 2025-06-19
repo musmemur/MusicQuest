@@ -10,7 +10,7 @@ public class PhotoSaver(IOptions<MinioSettings> settings) : IPhotoSaver
 {
     private readonly MinioSettings _settings = settings.Value;
 
-    public async Task<string> SavePhotoToS3(byte[] imageBytes, string mimeType, string bucketName)
+    public async Task<string> SavePhotoToS3(byte[] imageBytes, string mimeType)
     {
         var fileExtension = mimeType switch
         {
@@ -32,12 +32,12 @@ public class PhotoSaver(IOptions<MinioSettings> settings) : IPhotoSaver
 
         using var memoryStream = new MemoryStream(imageBytes);
         await minioClient.PutObjectAsync(new PutObjectArgs()
-            .WithBucket(bucketName)
+            .WithBucket(_settings.BucketName)
             .WithObject(uniqueFileName)
             .WithStreamData(memoryStream)
             .WithObjectSize(memoryStream.Length)
             .WithContentType(mimeType));
 
-        return $"http://{_settings.Endpoint}/{bucketName}/{uniqueFileName}"; 
+        return $"http://{_settings.Endpoint}/{_settings.BucketName}/{uniqueFileName}"; 
     }
 }

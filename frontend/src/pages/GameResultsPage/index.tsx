@@ -48,7 +48,7 @@ export const GameResultsPage = () => {
         };
     }, [connection, gameId]);
 
-    const isWinner = currentUser && results?.winnerId === currentUser.userId;
+    const isWinner = currentUser && results?.winners.includes(currentUser.userId);
 
     if (loading) {
         return (
@@ -86,17 +86,23 @@ export const GameResultsPage = () => {
             <div className="results-container">
                 <h1>Game Results</h1>
                 <div className="winner-section">
-                    <h2>🏆 Winner: {results.winnerName}</h2>
-                    {isWinner && (
-                        <div className="playlist-reward">
-                            <p>Congratulations! You've won a playlist with {results.genre} songs!</p>
-                            <button
-                                onClick={() => navigate(`/user/${currentUser.userId}`)}
-                                className="view-playlist-btn"
-                            >
-                                View Your Playlists
-                            </button>
-                        </div>
+                    {results.winnerNames.length > 0 ? (
+                        <>
+                            <h2>🏆 {results.winnerNames.length > 1 ? "Winners" : "Winner"}: {results.winnerNames.join(", ")}</h2>
+                            {isWinner && (
+                                <div className="playlist-reward">
+                                    <p>Congratulations! You've won a playlist with {results.genre} songs!</p>
+                                    <button
+                                        onClick={() => navigate(`/user/${currentUser.userId}`)}
+                                        className="view-playlist-btn"
+                                    >
+                                        View Your Playlists
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <h2>No winners - all players scored 0 points</h2>
                     )}
                 </div>
 
@@ -110,25 +116,29 @@ export const GameResultsPage = () => {
                         </tr>
                         </thead>
                         <tbody>
-                        {sortedPlayers.map((player, index) => (
-                            <tr key={player.userId} className={player.userId === results.winnerId ? "winner-row" : ""}>
-                                <td>{index + 1}</td>
-                                <td>
-                                    <Link to={`/user/${player.userId}`} className="player-info">
-                                        <img
-                                            src={player.userPhoto || photoPlaceholder}
-                                            alt={player.username}
-                                            className="player-avatar"
-                                        />
-                                        <span>{player.username}</span>
-                                        {player.userId === currentUser?.userId && (
-                                            <span className="you-badge">(You)</span>
-                                        )}
-                                    </Link>
-                                </td>
-                                <td>{player.score}</td>
-                            </tr>
-                        ))}
+                        {sortedPlayers.map((player, index) => {
+                            const isPlayerWinner = results.winners.includes(player.userId);
+                            return (
+                                <tr key={player.userId} className={isPlayerWinner ? "winner-row" : ""}>
+                                    <td>{index + 1}</td>
+                                    <td>
+                                        <Link to={`/user/${player.userId}`} className="player-info">
+                                            <img
+                                                src={player.userPhoto || photoPlaceholder}
+                                                alt={player.username}
+                                                className="player-avatar"
+                                            />
+                                            <span>{player.username}</span>
+                                            {player.userId === currentUser?.userId && (
+                                                <span className="you-badge">(You)</span>
+                                            )}
+                                            {isPlayerWinner && <span className="winner-badge">🏆</span>}
+                                        </Link>
+                                    </td>
+                                    <td>{player.score}</td>
+                                </tr>
+                            );
+                        })}
                         </tbody>
                     </table>
                 </div>

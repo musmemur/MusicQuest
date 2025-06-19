@@ -178,8 +178,15 @@ public class QuizHub(
     public async Task EndGame(string gameSessionId)
     {
         var results = await gameSessionService.PrepareGameResultsAsync(gameSessionId);
-        await playlistService.CreateWinnerPlaylistAsync(
-            gameSessionId, results.WinnerId.ToString(), Enum.Parse<DeezerGenre>(results.Genre));
+    
+        if (results.Winners.Count > 0)
+        {
+            foreach (var winnerId in results.Winners)
+            {
+                await playlistService.CreateWinnerPlaylistAsync(
+                    gameSessionId, winnerId, Enum.Parse<DeezerGenre>(results.Genre));
+            }
+        }
 
         await Clients.Group(results.RoomId.ToString()).SendAsync("GameEnded", results.Scores);
         await gameSessionService.EndSessionAsync(gameSessionId);
