@@ -12,7 +12,7 @@ public class QuizQuestionService(IDeezerApiClient deezerClient,
         var questions = new List<QuizQuestion>();
         for (var i = 0; i < count; i++)
         {
-            var questionType = (i % 2 == 0) ? "artist" : "track";
+            var questionType = i % 2 == 0 ? "artist" : "track";
             try
             {
                 var question = await deezerClient.GenerateQuizQuestionAsync(genre, questionType);

@@ -7,5 +7,5 @@ public class User(string username, string password, string? userPhoto)
     public string Password { get; set; } = password;
     public string? UserPhoto { get; set; } = userPhoto;
 
-    public List<Playlist> Playlists { get; set; } = new();
+    public List<Playlist> Playlists { get; set; } = [];
 }

@@ -11,7 +11,7 @@ public class RoomProfile : Profile
     {
         CreateMap<Room, RoomDto>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()))
-            .ForMember(dest => dest.Genre, opt => opt.MapFrom((src, dest, _, ctx) => 
+            .ForMember(dest => dest.Genre, opt => opt.MapFrom((src, _, _, ctx) => 
             {
                 var deezerApiClient = ctx.Items["DeezerApiClient"] as IDeezerApiClient;
                 return deezerApiClient?.ToDisplayString(src.Genre) ?? src.Genre.ToString();
