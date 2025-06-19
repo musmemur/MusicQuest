@@ -12,7 +12,8 @@ public class QuizHub(
     IRoomService roomService,
     IRoomRepository roomRepository,
     ILogger<QuizHub> logger,
-    IPlaylistService playlistService) : Hub
+    IPlaylistService playlistService,
+    IPlayerRepository playerRepository) : Hub
 {
     public async Task JoinRoom(string roomId, string userId)
     {
@@ -164,9 +165,13 @@ public class QuizHub(
             }
 
             var results = await gameSessionService.PrepareGameResultsAsync(gameSessionId);
-            await Clients.Caller.SendAsync("ReceiveGameResults", results);
+            await Clients.Group(gameSession.RoomId.ToString()).SendAsync("ReceiveGameResults", results);
         
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, results.RoomId.ToString());
+            if (gameSession.Room.HostUserId.ToString() == userId)
+            {
+                await playerRepository.RemoveRangeAsync(gameSession.Room.Players);
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, results.RoomId.ToString());
+            }
         }
         catch (Exception ex)
         {

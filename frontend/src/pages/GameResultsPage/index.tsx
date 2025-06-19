@@ -43,8 +43,6 @@ export const GameResultsPage = () => {
 
         return () => {
             connection.off("ReceiveGameResults");
-            connection.stop().catch(err =>
-                console.error("Error disconnecting from hub:", err));
         };
     }, [connection, gameId]);
 

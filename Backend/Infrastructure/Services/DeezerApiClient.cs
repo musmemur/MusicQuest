@@ -134,11 +134,11 @@ public class DeezerApiClient(HttpClient httpClient) : IDeezerApiClient
     {
         try
         {
-            var tracks = await GetTracksFromChart(genre, 10);
+            var tracks = await GetTracksFromChart(genre, 20);
             
-            if (tracks.Count < 10)
+            if (tracks.Count < 20)
             {
-                var additionalTracks = await GetTracksFromSearch(genre, 10 - tracks.Count);
+                var additionalTracks = await GetTracksFromSearch(genre, 20 - tracks.Count);
                 tracks.AddRange(additionalTracks);
             }
             

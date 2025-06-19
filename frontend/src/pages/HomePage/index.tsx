@@ -67,6 +67,15 @@ export const HomePage = () => {
             return;
         }
 
+        if (connection.state !== 'Connected') {
+            try {
+                await connection.start();
+            } catch (err) {
+                console.error("Error reconnecting:", err);
+                return;
+            }
+        }
+
         setJoiningRoomId(roomId);
         try {
             const fetchedUser = await fetchAuthUserData();
